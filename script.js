@@ -233,4 +233,4 @@ function updateCurrentDay() {
 }
 
 // Call clearLocalStorage() once to clear any previous data for testing purposes
-clearLocalStorage();
+// clearLocalStorage();

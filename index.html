@@ -3,28 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reward Tracker</title>
+    <title>Skill Issue</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Reward Tracker</h1>
-        <div class="session" id="session1">
-            <button class="payInBtn" onclick="payIn(0.10, 'session1')">1st Session - 0.10€</button>
+    <div class="tracker">
+        <h1>SKILL ISSUE</h1>
+        <div class="session-buttons">
+            <button id="session1" class="session-button" onclick="toggleSession(1)">SESH 1</button>
+            <button id="session2" class="session-button" onclick="toggleSession(2)" disabled>SESH 2</button>
+            <button id="session3" class="session-button" onclick="toggleSession(3)" disabled>SESH 3</button>
+            <button id="session4" class="session-button" onclick="toggleSession(4)" disabled>SESH 4</button>
         </div>
-        <div class="session" id="session2">
-            <button class="payInBtn" onclick="payIn(0.42, 'session2')">2nd Session - 0.42€</button>
+        <div class="progress-container" title="0 of 0 possible sessions done">
+            <div id="progressBar" class="progress-bar"></div>
         </div>
-        <div class="session" id="session3">
-            <button class="payInBtn" onclick="payIn(1.12, 'session3')">3rd Session - 1.12€</button>
+        <div class="total" id="totalContainer">
+            <span id="totalAmount">€0,00</span> of <span id="maxAmount">€0,00</span>
         </div>
-        <div class="session" id="session4">
-            <button class="payInBtn" onclick="payIn(1.68, 'session4')">4th Session - 1.68€</button>
+        <div class="calendar">
+            <h2 id="currentMonth">MAY</h2> <!-- ID added for dynamic month name -->
+            <div id="calendar"></div>
         </div>
-        <button class="resetBtn" onclick="resetAllSessions()">Reset All</button>
-        <h2>Total Saved: <span id="total">0.00€</span></h2>
-        <div id="calendar"></div>
-        <h2>Progress: <span id="progress">I</span></h2>
+        <div class="changelog">Version 1.10</div>
     </div>
     <script src="script.js"></script>
 </body>

@@ -7,23 +7,45 @@ let sessionPayments = {
     session4: false
 };
 let sessionCount = 0;
+const progressTicker = ['I', 'II', 'III', 'IIII'];
 
 // Initialize the calendar
 const calendar = document.getElementById('calendar');
 const today = new Date();
-const endOfYear = new Date(today.getFullYear(), 11, 31);
+const currentYear = today.getFullYear();
+const currentMonth = today.getMonth();
+const firstDay = new Date(currentYear, currentMonth, 1);
+const lastDay = new Date(currentYear, currentMonth + 1, 0);
+const totalDays = lastDay.getDate();
 
-for (let d = new Date(today); d <= endOfYear; d.setDate(d.getDate() + 1)) {
+// Unsuccessful dates for the current month (example dates)
+const unsuccessfulDates = ['2023-10-01', '2023-10-05', '2023-10-10'];
+
+for (let day = 1; day <= totalDays; day++) {
+    const date = new Date(currentYear, currentMonth, day);
+    const dateString = date.toISOString().split('T')[0];
+
     const dayElement = document.createElement('div');
     dayElement.classList.add('day');
-    dayElement.id = `day${d.toISOString().split('T')[0]}`;
-    
-    // Create an overlay div for green color
+    if (unsuccessfulDates.includes(dateString)) {
+        dayElement.classList.add('unsuccessful');
+    }
+
+    // Create overlay for progress bar
     const overlay = document.createElement('div');
     overlay.classList.add('overlay');
+
+    // Create progress ticker element
+    const progressTickerElement = document.createElement('div');
+    progressTickerElement.classList.add('progress-ticker');
+    progressTickerElement.setAttribute('id', `ticker${dateString}`);
+    progressTickerElement.innerText = 'I';
+
     dayElement.appendChild(overlay);
-    
-    dayElement.innerHTML += `<div class="date">${d.getDate()}.${d.getMonth() + 1}</div>`;
+    dayElement.appendChild(progressTickerElement);
+
+    dayElement.innerHTML += `<div class="date">${date.getDate()}.${date.getMonth() + 1}</div>`;
+    dayElement.setAttribute('id', `day${dateString}`);
     calendar.appendChild(dayElement);
 }
 
@@ -43,12 +65,16 @@ function payIn(amount, sessionId) {
         sessionPayments[sessionId] = true;
         sessionCount++;
 
-        // Mark the current day in the calendar with an overlay
+        // Update the overlay for the current day
         const today = new Date().toISOString().split('T')[0];
         const dayElement = document.getElementById(`day${today}`);
         if (dayElement) {
             const overlayElement = dayElement.querySelector('.overlay');
             overlayElement.style.height = `${(sessionCount / 4) * 100}%`;
+
+            // Update progress ticker in the calendar day
+            const tickerElement = document.getElementById(`ticker${today}`);
+            tickerElement.innerText = progressTicker[sessionCount - 1];
         }
     }
 }
@@ -69,6 +95,10 @@ function resetAllSessions() {
                 const overlayElement = dayElement.querySelector('.overlay');
                 sessionCount--;
                 overlayElement.style.height = `${(sessionCount / 4) * 100}%`;
+
+                // Update progress ticker in the calendar day
+                const tickerElement = document.getElementById(`ticker${today}`);
+                tickerElement.innerText = sessionCount > 0 ? progressTicker[sessionCount - 1] : 'I';
             }
 
             // Mark session as unpaid
@@ -90,13 +120,20 @@ function saveDailyTotal() {
     sessionCount = 0;
     document.getElementById('total').innerText = dailyTotal.toFixed(2) + '€';
     resetAllSessions();
+    const dayElement = document.getElementById(`day${today}`);
+    if (dayElement) {
+        const overlayElement = dayElement.querySelector('.overlay');
+        overlayElement.style.height = '0%';
+        const tickerElement = document.getElementById(`ticker${today}`);
+        tickerElement.innerText = 'I';
+    }
 }
 
 // Save the daily total at midnight
 function scheduleDailyReset() {
     const now = new Date();
     const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
-    const timeToMidnight = midnight.getTime() - now.getTime();
+    const timeToMidnight = midnight - now;
     setTimeout(() => {
         saveDailyTotal();
         scheduleDailyReset();

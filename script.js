@@ -31,13 +31,19 @@ const sessionValues = {
 
 const maxAmountPerDay = 3.32;
 
-// Save session data for the current day
+// Clear local storage for testing
+function clearLocalStorage() {
+    localStorage.removeItem('sessionData');
+    localStorage.removeItem('totalAmount');
+}
+
 function saveSessionData() {
     const dateKey = new Date().toLocaleDateString();
     const savedData = JSON.parse(localStorage.getItem('sessionData')) || {};
     savedData[dateKey] = sessionsFinished;
     localStorage.setItem('sessionData', JSON.stringify(savedData));
     localStorage.setItem('totalAmount', totalAmount.toFixed(2));
+    console.log('Data Saved: ', savedData, 'Total Amount:', totalAmount.toFixed(2));
 }
 
 function loadSessionData() {
@@ -47,14 +53,14 @@ function loadSessionData() {
         sessionsFinished = savedData[dateKey];
         updateSessionStates();
     } else {
-        // Reset sessionsFinished for a new day
         sessionsFinished = 0;
         resetSessionStates();
     }
-    totalAmount = calculateTotalAmount(); // Update total amount based on session data
+    totalAmount = calculateTotalAmount();
     updateTotalAmountDisplay();
     updateProgressBar();
     updateCurrentDay();
+    console.log('Data Loaded: ', savedData, 'Total Amount:', totalAmount.toFixed(2));
 }
 
 function updateSessionStates() {
@@ -66,9 +72,9 @@ function updateSessionStates() {
             sessionState[i] = false;
             sessionButtons[i].classList.remove('active');
         }
-        sessionButtons[i].disabled = i > (sessionsFinished + 1); // Disable buttons greater than the next session
+        sessionButtons[i].disabled = i > (sessionsFinished + 1);
     }
-    sessionButtons[1].disabled = false; // Ensure session 1 is always enabled
+    sessionButtons[1].disabled = false;
     updateCurrentDay();
 }
 
@@ -76,27 +82,27 @@ function resetSessionStates() {
     for (let i = 1; i <= 4; i++) {
         sessionState[i] = false;
         sessionButtons[i].classList.remove('active');
-        sessionButtons[i].disabled = i !== 1; // Only enable the first session button
+        sessionButtons[i].disabled = i !== 1;
     }
 }
 
 function toggleSession(sessionNumber) {
     if (sessionState[sessionNumber]) {
-        // Deactivate the selected session and any following sessions
         for (let i = sessionNumber; i <= 4; i++) {
             if (sessionState[i]) {
-                totalAmount -= sessionValues[i]; // Subtract session value from totalAmount
+                totalAmount = (totalAmount - sessionValues[i]).toFixed(2);
+                totalAmount = parseFloat(totalAmount);
                 sessionState[i] = false;
                 sessionButtons[i].classList.remove('active');
             }
-            sessionButtons[i].disabled = true; // Disable all following sessions
+            sessionButtons[i].disabled = true;
         }
         sessionsFinished = sessionNumber - 1;
     } else {
-        // Activate the selected session and any preceding sessions if not already activated
         for (let i = 1; i <= sessionNumber; i++) {
             if (!sessionState[i]) {
-                totalAmount += sessionValues[i]; // Add session value to totalAmount
+                totalAmount = (totalAmount + sessionValues[i]).toFixed(2);
+                totalAmount = parseFloat(totalAmount);
                 sessionState[i] = true;
                 sessionButtons[i].classList.add('active');
             }
@@ -104,7 +110,6 @@ function toggleSession(sessionNumber) {
         sessionsFinished = sessionNumber;
     }
 
-    // Ensure session 1 is always enabled and disable inappropriate buttons
     sessionButtons[1].disabled = false;
     for (let i = 2; i <= 4; i++) {
         sessionButtons[i].disabled = !(sessionState[i - 1]);
@@ -114,6 +119,7 @@ function toggleSession(sessionNumber) {
     saveSessionData();
     updateProgressBar();
     updateCurrentDay();
+    console.log('Session Toggled: ', sessionNumber, 'Total Amount:', totalAmount.toFixed(2));
 }
 
 function calculateTotalAmount() {
@@ -124,7 +130,7 @@ function calculateTotalAmount() {
             amount += sessionValues[i];
         }
     }
-    return amount;
+    return parseFloat(amount.toFixed(2));
 }
 
 function resetSessions() {
@@ -153,7 +159,7 @@ function updateProgressBar() {
     progressBar.style.width = `${progressPercentage}%`;
 
     const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-    const maxPossibleSessions = daysInMonth * 4; // 4 sessions per day
+    const maxPossibleSessions = daysInMonth * 4;
     const totalSessionsDone = Object.values(JSON.parse(localStorage.getItem('sessionData')) || {}).reduce((sum, val) => sum + val, 0);
     progressContainer.title = `${totalSessionsDone} of ${maxPossibleSessions} possible sessions done`;
 }
@@ -164,7 +170,7 @@ function formatCurrency(value) {
 
 function initializeCalendar() {
     const calendarEl = document.getElementById('calendar');
-    calendarEl.innerHTML = ''; // Clear existing calendar content to prevent duplication
+    calendarEl.innerHTML = '';
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -175,9 +181,9 @@ function initializeCalendar() {
         dayEl.dataset.day = day;
 
         if (day === new Date().getDate()) {
-            dayEl.classList.add('no-sessions'); // Start today with light red
+            dayEl.classList.add('no-sessions');
         } else if (day > new Date().getDate()) {
-            dayEl.style.backgroundColor = 'white'; // Future days should be white
+            dayEl.style.backgroundColor = 'white';
         }
 
         const dayNumberEl = document.createElement('div');
@@ -193,10 +199,8 @@ function initializeCalendar() {
 function updateCurrentDay() {
     const currentDayEl = document.querySelector(`.calendar-day[data-day="${new Date().getDate()}"]`);
     
-    // Remove previous session classes
     currentDayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions');
     
-    // Add the new session class based on the number of finished sessions
     let sessionClass = '';
     switch (sessionsFinished) {
         case 1:
@@ -217,7 +221,6 @@ function updateCurrentDay() {
     }
     currentDayEl.classList.add(sessionClass);
 
-    // Update the session count text
     let sessionCountEl = currentDayEl.querySelector('.session-count');
     if (!sessionCountEl) {
         sessionCountEl = document.createElement('div');
@@ -225,7 +228,9 @@ function updateCurrentDay() {
         currentDayEl.appendChild(sessionCountEl);
     }
 
-    // Set the Roman numeral based on sessionsFinished
     const romanNumerals = ['I', 'II', 'III', 'IV'];
     sessionCountEl.textContent = sessionsFinished > 0 ? romanNumerals[sessionsFinished - 1] : '';
 }
+
+// Call clearLocalStorage() once to clear any previous data for testing purposes
+// clearLocalStorage();

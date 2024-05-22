@@ -1,7 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
+    clearLocalStorage(); // Clear local storage for consistent initial state
     initializeCalendar();
     loadSessionData();
 });
+
+// Clear local storage for testing and consistent initial state
+function clearLocalStorage() {
+    localStorage.removeItem('sessionData');
+    localStorage.removeItem('totalAmount');
+}
+
+// Existing code follows ...
 
 const totalAmountElement = document.getElementById('totalAmount');
 const maxAmountElement = document.getElementById('maxAmount');
@@ -30,12 +39,6 @@ const sessionValues = {
 };
 
 const maxAmountPerDay = 3.32;
-
-// Clear local storage for testing
-function clearLocalStorage() {
-    localStorage.removeItem('sessionData');
-    localStorage.removeItem('totalAmount');
-}
 
 function saveSessionData() {
     const dateKey = new Date().toLocaleDateString();
@@ -232,5 +235,6 @@ function updateCurrentDay() {
     sessionCountEl.textContent = sessionsFinished > 0 ? romanNumerals[sessionsFinished - 1] : '';
 }
 
-// Call clearLocalStorage() once to clear any previous data for testing purposes
+// Uncomment clearLocalStorage() to clear any previous data for consistent initial state
+// Just run it once and then comment it back out
 // clearLocalStorage();

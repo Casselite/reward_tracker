@@ -1,19 +1,4 @@
-let currentDate = new Date();
-
-function setCurrentDate(year, month, day) {
-    currentDate = new Date(year, month, day);
-    updateMonthName();
-    initializeCalendar();
-    loadSessionData();
-}
-
-function updateMonthName() {
-    const monthNames = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
-    document.getElementById('currentMonth').textContent = monthNames[currentDate.getMonth()];
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-    updateMonthName();
     initializeCalendar();
     loadSessionData();
 });
@@ -48,7 +33,7 @@ const maxAmountPerDay = 3.32;
 
 // Save session data for the current day
 function saveSessionData() {
-    const dateKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${currentDate.getDate()}`;
+    const dateKey = new Date().toLocaleDateString();
     const savedData = JSON.parse(localStorage.getItem('sessionData')) || {};
     savedData[dateKey] = sessionsFinished;
     localStorage.setItem('sessionData', JSON.stringify(savedData));
@@ -56,12 +41,11 @@ function saveSessionData() {
 }
 
 function loadSessionData() {
-    const dateKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${currentDate.getDate()}`;
+    const dateKey = new Date().toLocaleDateString();
     const savedData = JSON.parse(localStorage.getItem('sessionData')) || {};
     if (savedData[dateKey]) {
         sessionsFinished = savedData[dateKey];
         updateSessionStates();
-        updateCurrentDay();
     } else {
         // Reset sessionsFinished for a new day
         sessionsFinished = 0;
@@ -101,8 +85,8 @@ function toggleSession(sessionNumber) {
             if (sessionState[i]) {
                 sessionState[i] = false;
                 sessionButtons[i].classList.remove('active');
-                sessionButtons[i].disabled = i !== 1; // Disable all following sessions, except allowing session 1
             }
+            sessionButtons[i].disabled = true; // Disable all following sessions
         }
         sessionsFinished = sessionNumber - 1;
     } else {
@@ -110,20 +94,19 @@ function toggleSession(sessionNumber) {
         for (let i = 1; i <= sessionNumber; i++) {
             sessionState[i] = true;
             sessionButtons[i].classList.add('active');
-            if (i < 4 && sessionState[i]) {
-                sessionButtons[i + 1].disabled = false; // Enable the next session button
-            }
         }
         sessionsFinished = sessionNumber;
     }
 
-    // Ensure session 1 is always enabled
+    // Ensure session 1 is always enabled and disable inappropriate buttons
     sessionButtons[1].disabled = false;
+    for (let i = 2; i <= 4; i++) {
+        sessionButtons[i].disabled = !(sessionState[i - 1]);
+    }
 
-    totalAmount = calculateTotalAmount();
+    totalAmount = calculateTotalAmount(); // Recalculate total amount
 
     updateTotalAmountDisplay();
-    updateCurrentDay();
     saveSessionData();
     updateProgressBar();
 }
@@ -144,52 +127,12 @@ function resetSessions() {
     sessionsFinished = 0;
     resetSessionStates();
     updateTotalAmountDisplay();
-    updateCurrentDay();
     saveSessionData();
     updateProgressBar();
 }
 
-function updateCurrentDay() {
-    const currentDayEl = document.querySelector(`.calendar-day[data-day="${currentDate.getDate()}"]`);
-    
-    // Remove previous session classes
-    currentDayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions');
-    
-    // Add the new session class based on the number of finished sessions
-    let sessionClass = '';
-    switch (sessionsFinished) {
-        case 1:
-            sessionClass = 'one-session';
-            break;
-        case 2:
-            sessionClass = 'two-sessions';
-            break;
-        case 3:
-            sessionClass = 'three-sessions';
-            break;
-        case 4:
-            sessionClass = 'four-sessions';
-            break;
-        default:
-            sessionClass = 'no-sessions';
-            break;
-    }
-    currentDayEl.classList.add(sessionClass);
-
-    // Update the session count text
-    let sessionCountEl = currentDayEl.querySelector('.session-count');
-    if (!sessionCountEl) {
-        sessionCountEl = document.createElement('div');
-        sessionCountEl.classList.add('session-count');
-        currentDayEl.appendChild(sessionCountEl);
-    }
-    // Set the Roman numeral based on sessionsFinished
-    const romanNumerals = ['I', 'II', 'III', 'IV'];
-    sessionCountEl.textContent = sessionsFinished > 0 ? romanNumerals[sessionsFinished - 1] : '';
-}
-
 function calculateMaxAmount() {
-    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
     return daysInMonth * maxAmountPerDay;
 }
 
@@ -204,7 +147,7 @@ function updateProgressBar() {
     const progressPercentage = (totalAmount / maxAmount) * 100;
     progressBar.style.width = `${progressPercentage}%`;
 
-    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
     const maxPossibleSessions = daysInMonth * 4; // 4 sessions per day
     const totalSessionsDone = Object.values(JSON.parse(localStorage.getItem('sessionData')) || {}).reduce((sum, val) => sum + val, 0);
     progressContainer.title = `${totalSessionsDone} of ${maxPossibleSessions} possible sessions done`;
@@ -217,18 +160,18 @@ function formatCurrency(value) {
 function initializeCalendar() {
     const calendarEl = document.getElementById('calendar');
     calendarEl.innerHTML = ''; // Clear existing calendar content to prevent duplication
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     
     for (let day = 1; day <= daysInMonth; day++) {
         const dayEl = document.createElement('div');
         dayEl.classList.add('calendar-day');
         dayEl.dataset.day = day;
-        
-        if (day === currentDate.getDate()) {
+
+        if (day === new Date().getDate()) {
             dayEl.classList.add('no-sessions'); // Start today with light red
-        } else if (day > currentDate.getDate()) {
+        } else if (day > new Date().getDate()) {
             dayEl.style.backgroundColor = 'white'; // Future days should be white
         }
 

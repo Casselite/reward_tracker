@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reward Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Reward Tracker</h1>
+        <div class="session" id="session1">
+            <button class="payInBtn" onclick="payIn(0.10, 'session1')">1st Session - 0.10€</button>
+        </div>
+        <div class="session" id="session2">
+            <button class="payInBtn" onclick="payIn(0.42, 'session2')">2nd Session - 0.42€</button>
+        </div>
+        <div class="session" id="session3">
+            <button class="payInBtn" onclick="payIn(1.12, 'session3')">3rd Session - 1.12€</button>
+        </div>
+        <div class="session" id="session4">
+            <button class="payInBtn" onclick="payIn(1.68, 'session4')">4th Session - 1.68€</button>
+        </div>
+        <button class="resetBtn" onclick="resetAllSessions()">Reset All</button>
+        <h2>Total Saved: <span id="total">0.00€</span></h2>
+        <div id="calendar"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

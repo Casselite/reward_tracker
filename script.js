@@ -54,6 +54,7 @@ function loadSessionData() {
     totalAmount = calculateTotalAmount(); // Update total amount based on session data
     updateTotalAmountDisplay();
     updateProgressBar();
+    updateCurrentDay();
 }
 
 function updateSessionStates() {
@@ -68,6 +69,7 @@ function updateSessionStates() {
         sessionButtons[i].disabled = i > (sessionsFinished + 1); // Disable buttons greater than the next session
     }
     sessionButtons[1].disabled = false; // Ensure session 1 is always enabled
+    updateCurrentDay();
 }
 
 function resetSessionStates() {
@@ -83,6 +85,7 @@ function toggleSession(sessionNumber) {
         // Deactivate the selected session and any following sessions
         for (let i = sessionNumber; i <= 4; i++) {
             if (sessionState[i]) {
+                totalAmount -= sessionValues[i]; // Subtract session value from totalAmount
                 sessionState[i] = false;
                 sessionButtons[i].classList.remove('active');
             }
@@ -92,8 +95,11 @@ function toggleSession(sessionNumber) {
     } else {
         // Activate the selected session and any preceding sessions if not already activated
         for (let i = 1; i <= sessionNumber; i++) {
-            sessionState[i] = true;
-            sessionButtons[i].classList.add('active');
+            if (!sessionState[i]) {
+                totalAmount += sessionValues[i]; // Add session value to totalAmount
+                sessionState[i] = true;
+                sessionButtons[i].classList.add('active');
+            }
         }
         sessionsFinished = sessionNumber;
     }
@@ -104,11 +110,10 @@ function toggleSession(sessionNumber) {
         sessionButtons[i].disabled = !(sessionState[i - 1]);
     }
 
-    totalAmount = calculateTotalAmount(); // Recalculate total amount
-
     updateTotalAmountDisplay();
     saveSessionData();
     updateProgressBar();
+    updateCurrentDay();
 }
 
 function calculateTotalAmount() {
@@ -183,4 +188,44 @@ function initializeCalendar() {
         calendarEl.appendChild(dayEl);
     }
     loadSessionData();
+}
+
+function updateCurrentDay() {
+    const currentDayEl = document.querySelector(`.calendar-day[data-day="${new Date().getDate()}"]`);
+    
+    // Remove previous session classes
+    currentDayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions');
+    
+    // Add the new session class based on the number of finished sessions
+    let sessionClass = '';
+    switch (sessionsFinished) {
+        case 1:
+            sessionClass = 'one-session';
+            break;
+        case 2:
+            sessionClass = 'two-sessions';
+            break;
+        case 3:
+            sessionClass = 'three-sessions';
+            break;
+        case 4:
+            sessionClass = 'four-sessions';
+            break;
+        default:
+            sessionClass = 'no-sessions';
+            break;
+    }
+    currentDayEl.classList.add(sessionClass);
+
+    // Update the session count text
+    let sessionCountEl = currentDayEl.querySelector('.session-count');
+    if (!sessionCountEl) {
+        sessionCountEl = document.createElement('div');
+        sessionCountEl.classList.add('session-count');
+        currentDayEl.appendChild(sessionCountEl);
+    }
+
+    // Set the Roman numeral based on sessionsFinished
+    const romanNumerals = ['I', 'II', 'III', 'IV'];
+    sessionCountEl.textContent = sessionsFinished > 0 ? romanNumerals[sessionsFinished - 1] : '';
 }

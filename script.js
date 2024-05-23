@@ -6,11 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Clear local storage for testing and consistent initial state
 function clearLocalStorage() {
+    console.log("Clearing Local Storage");
     localStorage.removeItem('sessionData');
     localStorage.removeItem('totalAmount');
+    console.log("Local Storage Cleared");
 }
-
-// Existing code follows ...
 
 const totalAmountElement = document.getElementById('totalAmount');
 const maxAmountElement = document.getElementById('maxAmount');
@@ -40,8 +40,14 @@ const sessionValues = {
 
 const maxAmountPerDay = 3.32;
 
+// Function to get the current date in a consistent format
+function getFormattedDate() {
+    const now = new Date();
+    return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+}
+
 function saveSessionData() {
-    const dateKey = new Date().toLocaleDateString();
+    const dateKey = getFormattedDate();
     const savedData = JSON.parse(localStorage.getItem('sessionData')) || {};
     savedData[dateKey] = sessionsFinished;
     localStorage.setItem('sessionData', JSON.stringify(savedData));
@@ -50,8 +56,9 @@ function saveSessionData() {
 }
 
 function loadSessionData() {
-    const dateKey = new Date().toLocaleDateString();
+    const dateKey = getFormattedDate();
     const savedData = JSON.parse(localStorage.getItem('sessionData')) || {};
+    console.log("Loaded Session Data: ", savedData);
     if (savedData[dateKey]) {
         sessionsFinished = savedData[dateKey];
         updateSessionStates();
@@ -128,6 +135,7 @@ function toggleSession(sessionNumber) {
 function calculateTotalAmount() {
     let amount = 0;
     const savedData = JSON.parse(localStorage.getItem('sessionData')) || {};
+    console.log("Calculating Total Amount from: ", savedData);
     for (const dateKey in savedData) {
         for (let i = 1; i <= savedData[dateKey]; i++) {
             amount += sessionValues[i];
@@ -203,20 +211,20 @@ function updateCurrentDay() {
     const currentDayEl = document.querySelector(`.calendar-day[data-day="${new Date().getDate()}"]`);
     
     currentDayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions');
-    
+   
     let sessionClass = '';
     switch (sessionsFinished) {
         case 1:
             sessionClass = 'one-session';
             break;
         case 2:
-            sessionClass = 'two-sessions';
+            sessionClass = 'two-session';
             break;
         case 3:
-            sessionClass = 'three-sessions';
+            sessionClass = 'three-session';
             break;
         case 4:
-            sessionClass = 'four-sessions';
+            sessionClass = 'four-session';
             break;
         default:
             sessionClass = 'no-sessions';
@@ -237,4 +245,4 @@ function updateCurrentDay() {
 
 // Uncomment clearLocalStorage() to clear any previous data for consistent initial state
 // Just run it once and then comment it back out
-clearLocalStorage();
+// clearLocalStorage();

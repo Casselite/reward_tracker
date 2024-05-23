@@ -191,9 +191,6 @@ function initializeCalendar() {
         dayContainerEl.appendChild(dayNumberEl);
         calendarEl.appendChild(dayContainerEl);
     }
-
-    // Load session data after generating the calendar
-    loadSessionData();
 }
 
 function updateCurrentDay() {
@@ -245,6 +242,11 @@ function updateCalendarDays() {
 
         dayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions', 'inactive-day');
 
+        // Remove any previously added inactive mark
+        if (dayEl.querySelector('.inactive-mark')) {
+            dayEl.querySelector('.inactive-mark').remove();
+        }
+
         if (sessionData[dateKey]) {
             let sessionClass = '';
             switch (sessionData[dateKey]) {
@@ -276,12 +278,6 @@ function updateCalendarDays() {
         } else {
             if (day < today) {
                 dayEl.classList.add('inactive-day');
-                if (!dayEl.querySelector('.inactive-day::before')) {
-                    const inactiveMark = document.createElement('div');
-                    inactiveMark.classList.add('inactive-mark');
-                    inactiveMark.textContent = 'X';
-                    dayEl.appendChild(inactiveMark);
-                }
             }
         }
     });

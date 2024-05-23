@@ -1,16 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    clearLocalStorage(); // Clear local storage for consistent initial state
     initializeCalendar();
     loadSessionData();
 });
-
-// Clear local storage for testing and consistent initial state
-function clearLocalStorage() {
-    console.log("Clearing Local Storage");
-    localStorage.removeItem('sessionData');
-    localStorage.removeItem('totalAmount');
-    console.log("Local Storage Cleared");
-}
 
 const totalAmountElement = document.getElementById('totalAmount');
 const maxAmountElement = document.getElementById('maxAmount');
@@ -40,7 +31,6 @@ const sessionValues = {
 
 const maxAmountPerDay = 3.32;
 
-// Function to get the current date in a consistent format
 function getFormattedDate() {
     const now = new Date();
     return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
@@ -218,19 +208,26 @@ function updateCurrentDay() {
             sessionClass = 'one-session';
             break;
         case 2:
-            sessionClass = 'two-session';
+            sessionClass = 'two-sessions';
             break;
         case 3:
-            sessionClass = 'three-session';
+            sessionClass = 'three-sessions';
             break;
         case 4:
-            sessionClass = 'four-session';
+            sessionClass = 'four-sessions';
             break;
         default:
             sessionClass = 'no-sessions';
             break;
     }
+    console.log(`Adding class ${sessionClass} to current day element`);
     currentDayEl.classList.add(sessionClass);
+    console.log(`Current day element classes: ${currentDayEl.className}`);
+
+    // Force repaint
+    currentDayEl.style.display = 'none';
+    currentDayEl.offsetHeight; // Trigger reflow
+    currentDayEl.style.display = '';
 
     let sessionCountEl = currentDayEl.querySelector('.session-count');
     if (!sessionCountEl) {
@@ -241,8 +238,8 @@ function updateCurrentDay() {
 
     const romanNumerals = ['I', 'II', 'III', 'IV'];
     sessionCountEl.textContent = sessionsFinished > 0 ? romanNumerals[sessionsFinished - 1] : '';
+    console.log(`Updated session count text: ${sessionCountEl.textContent}`);
 }
 
 // Uncomment clearLocalStorage() to clear any previous data for consistent initial state
-// Just run it once and then comment it back out
 // clearLocalStorage();

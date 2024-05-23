@@ -262,7 +262,7 @@ h2 {
 .changelog {
     position: absolute;
     bottom: 5px;
-    right: 5px;
+    right: 25px;
     font-size: 10px;
     color: #888;
     font-family: "Inconsolata", monospace;

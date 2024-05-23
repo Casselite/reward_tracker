@@ -61,7 +61,6 @@ body {
 }
 
 .tracker {
-     position: relative;
     background: white;
     padding: 20px; /* Increase padding for better spacing */
     border-radius: 25px;
@@ -179,7 +178,7 @@ h2 {
     align-items: center;
     border: 1px solid #ccc;
     border-radius: 5px;
-    transition: background-color 2s ease;
+    transition: background-color 0.7s ease;
     box-sizing: border-box;
     font-size: 18px;
 }
@@ -243,12 +242,17 @@ h2 {
 }
 
 .calendar-day.inactive-day {
+    position: relative;
     background-color: white;
     border: 1px solid red;
 }
 
-.inactive-day::before {
+.calendar-day.inactive-day::before {
     content: "X";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     font-size: 35px;
     pointer-events: none;
     -webkit-text-stroke: 1px red;

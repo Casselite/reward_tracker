@@ -1,3 +1,17 @@
+/* CSS Reset */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: inherit;
+}
+
+/* Set default box-sizing to border-box */
+html {
+    box-sizing: border-box;
+}
+
 body {
     font-family: 'Arial', sans-serif;
     display: flex;
@@ -6,36 +20,72 @@ body {
     height: 100vh;
     background-color: #f2f2f2;
     margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent scrolling */
+}
+
+/* Using the new Inconsolata font with unique classes */
+.inconsolata-title {
+    font-family: "Inconsolata", monospace;
+    font-weight: 700; /* Adjust weight as desired */
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+}
+
+.inconsolata-button {
+    font-family: "Inconsolata", monospace;
+    font-weight: 400; /* Adjust weight as desired */
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+}
+
+.inconsolata-total {
+    font-family: "Inconsolata", monospace;
+    font-weight: 300; /* Adjust weight as desired */
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+}
+
+.inconsolata-month {
+    font-family: "Inconsolata", monospace;
+    font-weight: 600; /* Adjust weight as desired */
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
+}
+
+.inconsolata-changelog {
+    font-family: "Inconsolata", monospace;
+    font-weight: 200; /* Adjust weight as desired */
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
 }
 
 .tracker {
     background: white;
-    padding: 20px;
-    border-radius: 10px;
-    border: 2px solid #ccc;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 20px; /* Increase padding for better spacing */
+    border-radius: 25px;
+    border: 0.5px solid #000;
+    box-shadow: 25px rgba(0, 0, 0, 0.1);
     text-align: center;
-    width: 80%;
-    max-width: 600px;
-    position: relative; /* For the version number positioning */
-}
-
-h1, h2 {
-    margin: 0 0 10px;
-    color: transparent;
-    -webkit-text-stroke: 0.5px black; /* Thinner black outline */
-    letter-spacing: 2px; /* Wide letter spacing */
-    font-weight: bold;
+    max-width: 100%;
+    width: 800px; /* Increased width to half the size of double the original 400px */
+    height: auto; /* Adjust height based on content */
+    overflow: hidden; /* Ensure no overflow within the box */
 }
 
 h1 {
-    font-size: 36px; /* Font size for SKILL ISSUE */
-    text-shadow: 1px 1px 0 white, -0.5px -0.5px 0 white, 0.5px -0.5px 0 white, -0.5px 0.5px 0 white, 0.5px 0.5px 0 white;
+    margin: 0 0 5px;
+    color: transparent;
+    -webkit-text-stroke: 0.5px black;
+    letter-spacing: 5px;
+    font-size: 55px;
 }
 
 h2 {
-    font-size: 24px; /* Font size for month name */
-    text-shadow: 1px 1px 0 #f2f2f2, -0.5px -0.5px 0 #f2f2f2, 0.5px -0.5px 0 #f2f2f2, -0.5px 0.5px 0 #f2f2f2, 0.5px 0.5px 0 #f2f2f2;
+    margin: 0 0 5px;
+    color: #218838;
+    letter-spacing: 5px;
+    font-size: 40px;
 }
 
 .session-buttons {
@@ -44,39 +94,41 @@ h2 {
     margin-bottom: 20px;
 }
 
-.session-buttons .session-button {
+.session-button {
     flex: 1;
-    margin: 0 5px;
-    padding: 15px 0;
-    font-size: 16px;
+    margin: 0 2px;
+    padding: 10px 0;
+    font-size: 25px;
     cursor: pointer;
     border: 1px solid #6c757d;
     background: transparent;
     color: #6c757d;
     border-radius: 5px;
     transition: background 0.2s ease-in-out, transform 0.2s ease;
+    box-sizing: border-box;
 }
 
-.session-buttons .session-button:disabled {
+.session-button:disabled {
     background: #e0e0e0;
     color: #6c757d;
     cursor: not-allowed;
-    border: 1px solid #6c757d;
 }
 
-.session-buttons .session-button.active {
+.session-button.active {
     background: #28a745;
     color: white;
+    border-color: #28a745;
 }
 
-.session-buttons .session-button:hover:not(:disabled) {
+.session-button:hover:not(:disabled) {
     background: #218838;
     color: white;
+    border-color: #218838;
 }
 
 .total {
-    margin-top: 20px;
-    font-size: 14px;
+    margin-top: 10px;
+    font-size: 18px;
     color: #333;
 }
 
@@ -85,13 +137,15 @@ h2 {
     background-color: #ccc;
     border-radius: 5px;
     overflow: hidden;
-    margin: 20px 0;
+    margin: 20px 0 10px 0;
     position: relative;
+    border: 0.3px solid #000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar {
     height: 10px;
-    background-color: #a8db8f;
+    background-color: #28a745;
     width: 0%;
     transition: width 0.5s ease;
 }
@@ -100,22 +154,33 @@ h2 {
     margin-top: 20px;
 }
 
-.calendar h2 {
-    margin-bottom: 10px;
+#calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    width: 100%;
+}
+
+.calendar-day-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: none;
+    padding: 0;
+    margin: 0;
 }
 
 .calendar-day {
-    display: inline-block;
-    width: 40px;
-    height: 60px;
-    margin: 2px;
+    width: 100%;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     border: 1px solid #ccc;
-    position: relative;
-    vertical-align: top;
     border-radius: 5px;
-    overflow: hidden;
-    background-color: #f8d7da;
-    transition: background-color 0.3s ease;
+    transition: background-color 2s ease;
+    box-sizing: border-box;
+    font-size: 18px;
 }
 
 .calendar-day.no-sessions {
@@ -139,14 +204,10 @@ h2 {
 }
 
 .session-count {
-    font-size: 40px;
+    font-size: 35px;
     color: transparent;
     pointer-events: none;
     font-weight: bold;
-    position: absolute;
-    top: 35%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     -webkit-text-stroke: 1px black;
     text-shadow: 2px 2px 0 #f8d7da, -1px -1px 0 #f8d7da, 1px -1px 0 #f8d7da, -1px 1px 0 #f8d7da, 1px 1px 0 #f8d7da;
 }
@@ -168,22 +229,43 @@ h2 {
 }
 
 .day-number {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    font-size: 12px;
+    width: 100%;
+    text-align: center;
+    font-size: 14px;
     color: #333;
     background: #f2f2f2;
-    text-align: center;
     padding: 2px 0;
-    border-top: 1px solid #ccc;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    border-top: none;
+    box-sizing: border-box;
+}
+
+.calendar-day.inactive-day {
+    background-color: white;
+    border: 1px solid red;
+}
+
+.inactive-day::before {
+    content: "X";
+    font-size: 35px;
+    pointer-events: none;
+    -webkit-text-stroke: 1px red;
+    color: transparent;
+}
+
+.calendar-day.current-day {
+    border: 1px solid green;
 }
 
 .changelog {
     position: absolute;
-    bottom: 10px;
-    right: 10px;
-    font-size: 12px;
+    bottom: 5px;
+    right: 5px;
+    font-size: 10px;
     color: #888;
+    font-family: "Inconsolata", monospace;
+    font-weight: 200;
+    font-optical-sizing: auto;
+    font-variation-settings: "wdth" 100;
 }

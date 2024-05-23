@@ -237,4 +237,4 @@ function updateCurrentDay() {
 
 // Uncomment clearLocalStorage() to clear any previous data for consistent initial state
 // Just run it once and then comment it back out
-// clearLocalStorage();
+clearLocalStorage();

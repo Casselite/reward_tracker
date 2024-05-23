@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initializeCalendar();
     setupSessionButtons();
-    loadSessionData(); // Make sure this is called after initializing the calendar and setting up the buttons
+    loadSessionData();
 });
 
 const totalAmountElement = document.getElementById('totalAmount');
@@ -16,6 +16,7 @@ const sessionButtons = {
 };
 let totalAmount = parseFloat(localStorage.getItem('totalAmount')) || 0.00;
 let sessionsFinished = 0;
+let sessionData = JSON.parse(localStorage.getItem('sessionData')) || {};
 let sessionState = {
     1: false,
     2: false,
@@ -39,19 +40,16 @@ function getFormattedDate() {
 
 function saveSessionData() {
     const dateKey = getFormattedDate();
-    const savedData = JSON.parse(localStorage.getItem('sessionData')) || {};
-    savedData[dateKey] = sessionsFinished;
-    localStorage.setItem('sessionData', JSON.stringify(savedData));
+    sessionData[dateKey] = sessionsFinished;
+    localStorage.setItem('sessionData', JSON.stringify(sessionData));
     localStorage.setItem('totalAmount', totalAmount.toFixed(2));
-    console.log('Data Saved: ', savedData, 'Total Amount:', totalAmount.toFixed(2));
+    console.log('Data Saved: ', sessionData, 'Total Amount:', totalAmount.toFixed(2));
 }
 
 function loadSessionData() {
     const dateKey = getFormattedDate();
-    const savedData = JSON.parse(localStorage.getItem('sessionData')) || {};
-    console.log("Loaded Session Data: ", savedData);
-    if (savedData[dateKey]) {
-        sessionsFinished = savedData[dateKey];
+    if (sessionData[dateKey]) {
+        sessionsFinished = sessionData[dateKey];
         updateSessionStates();
     } else {
         sessionsFinished = 0;
@@ -60,9 +58,8 @@ function loadSessionData() {
     totalAmount = calculateTotalAmount();
     updateTotalAmountDisplay();
     updateProgressBar();
-    updateCurrentDay();
-    markInactiveDays(savedData);
-    console.log('Data Loaded: ', savedData, 'Total Amount:', totalAmount.toFixed(2));
+    updateCalendarDays();
+    console.log('Data Loaded: ', sessionData, 'Total Amount:', totalAmount.toFixed(2));
 }
 
 function updateSessionStates() {
@@ -126,10 +123,9 @@ function toggleSession(sessionNumber) {
 
 function calculateTotalAmount() {
     let amount = 0;
-    const savedData = JSON.parse(localStorage.getItem('sessionData')) || {};
-    console.log("Calculating Total Amount from: ", savedData);
-    for (const dateKey in savedData) {
-        for (let i = 1; i <= savedData[dateKey]; i++) {
+    console.log("Calculating Total Amount from: ", sessionData);
+    for (const dateKey in sessionData) {
+        for (let i = 1; i <= sessionData[dateKey]; i++) {
             amount += sessionValues[i];
         }
     }
@@ -163,7 +159,7 @@ function updateProgressBar() {
 
     const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
     const maxPossibleSessions = daysInMonth * 4;
-    const totalSessionsDone = Object.values(JSON.parse(localStorage.getItem('sessionData')) || {}).reduce((sum, val) => sum + val, 0);
+    const totalSessionsDone = Object.values(sessionData).reduce((sum, val) => sum + val, 0);
     progressContainer.title = `${totalSessionsDone} of ${maxPossibleSessions} possible sessions done`;
 }
 
@@ -187,11 +183,6 @@ function initializeCalendar() {
         dayEl.classList.add('calendar-day');
         dayEl.dataset.day = day;
 
-        if (day === currentDate.getDate()) {
-            dayEl.classList.add('current-day');
-            dayEl.classList.add('no-sessions'); // Default for current day
-        }
-
         const dayNumberEl = document.createElement('div');
         dayNumberEl.classList.add('day-number');
         dayNumberEl.textContent = day;
@@ -201,7 +192,7 @@ function initializeCalendar() {
         calendarEl.appendChild(dayContainerEl);
     }
 
-    // After generating the calendar, load session data
+    // Load session data after generating the calendar
     loadSessionData();
 }
 
@@ -243,7 +234,7 @@ function updateCurrentDay() {
     sessionCountEl.textContent = sessionsFinished > 0 ? romanNumerals[sessionsFinished - 1] : '';
 }
 
-function markInactiveDays(savedData) {
+function updateCalendarDays() {
     const today = new Date().getDate();
     const currentMonth = new Date().getMonth() + 1;
     const currentYear = new Date().getFullYear();
@@ -252,10 +243,46 @@ function markInactiveDays(savedData) {
         const day = parseInt(dayEl.dataset.day, 10);
         const dateKey = `${currentYear}-${currentMonth}-${day}`;
 
-        if (day < today && !savedData[dateKey]) {
-            dayEl.classList.add('inactive-day');
-        } else if (day < today && savedData[dateKey]) {
-            dayEl.classList.add('active-day'); // Optionally mark previously active days
+        dayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions', 'inactive-day');
+
+        if (sessionData[dateKey]) {
+            let sessionClass = '';
+            switch (sessionData[dateKey]) {
+                case 1:
+                    sessionClass = 'one-session';
+                    break;
+                case 2:
+                    sessionClass = 'two-sessions';
+                    break;
+                case 3:
+                    sessionClass = 'three-sessions';
+                    break;
+                case 4:
+                    sessionClass = 'four-sessions';
+                    break;
+                default:
+                    sessionClass = 'no-sessions';
+                    break;
+            }
+            dayEl.classList.add(sessionClass);
+            let sessionCountEl = dayEl.querySelector('.session-count');
+            if (!sessionCountEl) {
+                sessionCountEl = document.createElement('div');
+                sessionCountEl.classList.add('session-count');
+                dayEl.appendChild(sessionCountEl);
+            }
+            const romanNumerals = ['I', 'II', 'III', 'IV'];
+            sessionCountEl.textContent = sessionData[dateKey] > 0 ? romanNumerals[sessionData[dateKey] - 1] : '';
+        } else {
+            if (day < today) {
+                dayEl.classList.add('inactive-day');
+                if (!dayEl.querySelector('.inactive-day::before')) {
+                    const inactiveMark = document.createElement('div');
+                    inactiveMark.classList.add('inactive-mark');
+                    inactiveMark.textContent = 'X';
+                    dayEl.appendChild(inactiveMark);
+                }
+            }
         }
     });
 }

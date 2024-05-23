@@ -61,6 +61,7 @@ body {
 }
 
 .tracker {
+     position: relative;
     background: white;
     padding: 20px; /* Increase padding for better spacing */
     border-radius: 25px;

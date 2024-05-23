@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initializeCalendar();
     loadSessionData();
+    setupSessionButtons();
 });
 
 const totalAmountElement = document.getElementById('totalAmount');
@@ -60,6 +61,7 @@ function loadSessionData() {
     updateTotalAmountDisplay();
     updateProgressBar();
     updateCurrentDay();
+    markInactiveDays(savedData);
     console.log('Data Loaded: ', savedData, 'Total Amount:', totalAmount.toFixed(2));
 }
 
@@ -175,13 +177,17 @@ function initializeCalendar() {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    
+
     for (let day = 1; day <= daysInMonth; day++) {
+        const dayContainerEl = document.createElement('div');
+        dayContainerEl.classList.add('calendar-day-container');
+
         const dayEl = document.createElement('div');
         dayEl.classList.add('calendar-day');
         dayEl.dataset.day = day;
 
         if (day === new Date().getDate()) {
+            dayEl.classList.add('current-day');
             dayEl.classList.add('no-sessions');
         } else if (day > new Date().getDate()) {
             dayEl.style.backgroundColor = 'white';
@@ -190,18 +196,19 @@ function initializeCalendar() {
         const dayNumberEl = document.createElement('div');
         dayNumberEl.classList.add('day-number');
         dayNumberEl.textContent = day;
-        dayEl.appendChild(dayNumberEl);
-        
-        calendarEl.appendChild(dayEl);
+
+        dayContainerEl.appendChild(dayEl);
+        dayContainerEl.appendChild(dayNumberEl);
+        calendarEl.appendChild(dayContainerEl);
     }
     loadSessionData();
 }
 
 function updateCurrentDay() {
     const currentDayEl = document.querySelector(`.calendar-day[data-day="${new Date().getDate()}"]`);
-    
+
     currentDayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions');
-   
+
     let sessionClass = '';
     switch (sessionsFinished) {
         case 1:
@@ -224,7 +231,7 @@ function updateCurrentDay() {
     currentDayEl.classList.add(sessionClass);
     console.log(`Current day element classes: ${currentDayEl.className}`);
 
-    // Force repaint
+    // Force repaint (remove if not needed)
     currentDayEl.style.display = 'none';
     currentDayEl.offsetHeight; // Trigger reflow
     currentDayEl.style.display = '';
@@ -241,5 +248,32 @@ function updateCurrentDay() {
     console.log(`Updated session count text: ${sessionCountEl.textContent}`);
 }
 
+function markInactiveDays(savedData) {
+    const currentDate = new Date().getDate();
+    const currentMonth = new Date().getMonth() + 1;
+    const currentYear = new Date().getFullYear();
+
+    document.querySelectorAll('.calendar-day').forEach(dayEl => {
+        const day = parseInt(dayEl.dataset.day, 10);
+        const dateKey = `${currentYear}-${currentMonth}-${day}`;
+
+        if (day < currentDate && !savedData[dateKey]) {
+            dayEl.classList.add('inactive-day');
+        }
+    });
+}
+
+// Add event listeners to session buttons
+function setupSessionButtons() {
+    for (let i = 1; i <= 4; i++) {
+        sessionButtons[i].addEventListener('click', () => toggleSession(i));
+    }
+}
+
 // Uncomment clearLocalStorage() to clear any previous data for consistent initial state
 // clearLocalStorage();
+
+function clearLocalStorage() {
+    localStorage.clear();
+    loadSessionData();
+}

@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeCalendar();
     setupSessionButtons();
     loadSessionData();
+    updateCurrentMonthDisplay();
 });
 
 const totalAmountElement = document.getElementById('totalAmount');
@@ -14,7 +15,7 @@ const sessionButtons = {
     3: document.getElementById('session3'),
     4: document.getElementById('session4')
 };
-let totalAmount = parseFloat(localStorage.getItem('totalAmount')) || 0.00;
+let totalAmount = 0.00;
 let sessionsFinished = 0;
 let sessionData = JSON.parse(localStorage.getItem('sessionData')) || {};
 let sessionState = {
@@ -23,7 +24,6 @@ let sessionState = {
     3: false,
     4: false
 };
-
 const sessionValues = {
     1: 0.10,
     2: 0.42,
@@ -38,23 +38,46 @@ function getFormattedDate() {
     return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 }
 
+function updateCurrentMonthDisplay() {
+    const currentDate = new Date();
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June', 'July',
+        'August', 'September', 'October', 'November', 'December'
+    ];
+    document.getElementById('currentMonth').textContent = monthNames[currentDate.getMonth()];
+}
+
 function saveSessionData() {
     const dateKey = getFormattedDate();
     sessionData[dateKey] = sessionsFinished;
     localStorage.setItem('sessionData', JSON.stringify(sessionData));
     localStorage.setItem('totalAmount', totalAmount.toFixed(2));
+    console.log('Saving Data:', { totalAmount }); // Debugging log
 }
 
 function loadSessionData() {
     const dateKey = getFormattedDate();
+    const currentMonth = new Date().getMonth() + 1;
+    const storedMonth = sessionData.currentMonth || currentMonth;
+    
+    if (storedMonth !== currentMonth) {
+        sessionData = { currentMonth: currentMonth };
+        totalAmount = 0.00;
+        sessionsFinished = 0;
+        resetSessionStates();
+        localStorage.setItem('sessionData', JSON.stringify(sessionData));
+    } else {
+        sessionData.currentMonth = currentMonth;
+        localStorage.setItem('sessionData', JSON.stringify(sessionData));
+    }
+
+    totalAmount = calculateTotalAmount();
+
     if (sessionData[dateKey]) {
         sessionsFinished = sessionData[dateKey];
         updateSessionStates();
-    } else {
-        sessionsFinished = 0;
-        resetSessionStates();
     }
-    totalAmount = calculateTotalAmount();
+
     updateTotalAmountDisplay();
     updateProgressBar();
     updateCalendarDays();
@@ -81,6 +104,7 @@ function resetSessionStates() {
         sessionButtons[i].classList.remove('active');
         sessionButtons[i].disabled = i !== 1;
     }
+    sessionButtons[1].disabled = false;
 }
 
 function toggleSession(sessionNumber) {
@@ -129,8 +153,10 @@ function toggleSession(sessionNumber) {
 function calculateTotalAmount() {
     let amount = 0;
     for (const dateKey in sessionData) {
-        for (let i = 1; i <= sessionData[dateKey]; i++) {
-            amount += sessionValues[i];
+        if (dateKey !== "currentMonth") {
+            for (let i = 1; i <= sessionData[dateKey]; i++) {
+                amount += sessionValues[i];
+            }
         }
     }
     return parseFloat(amount.toFixed(2));
@@ -151,9 +177,10 @@ function calculateMaxAmount() {
 }
 
 function updateTotalAmountDisplay() {
-    totalAmountElement.textContent = formatCurrency(totalAmount);
     const maxAmount = calculateMaxAmount();
+    totalAmountElement.textContent = formatCurrency(totalAmount);
     maxAmountElement.textContent = formatCurrency(maxAmount);
+    console.log('Updated Display. totalAmount:', totalAmountElement.textContent); // Debugging log
 }
 
 function updateProgressBar() {
@@ -163,12 +190,13 @@ function updateProgressBar() {
 
     const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
     const maxPossibleSessions = daysInMonth * 4;
-    const totalSessionsDone = Object.values(sessionData).reduce((sum, val) => sum + val, 0);
+    const totalSessionsDone = Object.values(sessionData).reduce((sum, val) => typeof val === 'number' ? sum + val : sum, 0);
     progressContainer.title = `${totalSessionsDone} of ${maxPossibleSessions} possible sessions done`;
 }
 
 function formatCurrency(value) {
-    return `€${value.toFixed(2).replace('.', ',')}`;
+    const formattedValue = value.toFixed(2).replace('.', ',');
+    return formattedValue === '-0,00' || formattedValue === '0,00' ? '€0,00' : `€${formattedValue}`;
 }
 
 function initializeCalendar() {
@@ -195,7 +223,7 @@ function initializeCalendar() {
         dayContainerEl.appendChild(dayNumberEl);
         calendarEl.appendChild(dayContainerEl);
     }
-    
+
     updateCalendarDays();
 }
 
@@ -304,6 +332,7 @@ function setupSessionButtons() {
             const wasActive = sessionState[i];
             toggleSession(i);
             const isActive = sessionState[i];
+            console.log('Button Clicked:', i, 'wasActive:', wasActive, 'isActive:', isActive);
 
             if (!wasActive && isActive) {
                 const soundToPlay = i === 4 ? specialClickSound : clickSound;
@@ -316,5 +345,6 @@ function setupSessionButtons() {
 
 function clearLocalStorage() {
     localStorage.clear();
+    console.log('LocalStorage Cleared');
     loadSessionData();
 }

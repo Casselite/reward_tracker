@@ -27,50 +27,50 @@ body {
 /* Using the new Inconsolata font with unique classes */
 .inconsolata-title {
     font-family: "Inconsolata", monospace;
-    font-weight: 700; /* Adjust weight as desired */
+    font-weight: 700;
     font-optical-sizing: auto;
     font-variation-settings: "wdth" 100;
 }
 
 .inconsolata-button {
     font-family: "Inconsolata", monospace;
-    font-weight: 400; /* Adjust weight as desired */
+    font-weight: 400;
     font-optical-sizing: auto;
     font-variation-settings: "wdth" 100;
 }
 
 .inconsolata-total {
     font-family: "Inconsolata", monospace;
-    font-weight: 300; /* Adjust weight as desired */
+    font-weight: 300;
     font-optical-sizing: auto;
     font-variation-settings: "wdth" 100;
 }
 
 .inconsolata-month {
     font-family: "Inconsolata", monospace;
-    font-weight: 600; /* Adjust weight as desired */
+    font-weight: 600;
     font-optical-sizing: auto;
     font-variation-settings: "wdth" 100;
 }
 
 .inconsolata-changelog {
     font-family: "Inconsolata", monospace;
-    font-weight: 200; /* Adjust weight as desired */
+    font-weight: 200;
     font-optical-sizing: auto;
     font-variation-settings: "wdth" 100;
 }
 
 .tracker {
     background: white;
-    padding: 20px; /* Increase padding for better spacing */
+    padding: 20px;
     border-radius: 25px;
     border: 0.5px solid #000;
     box-shadow: 25px rgba(0, 0, 0, 0.1);
     text-align: center;
     max-width: 100%;
-    width: 800px; /* Increased width to half the size of double the original 400px */
-    height: auto; /* Adjust height based on content */
-    overflow: hidden; /* Ensure no overflow within the box */
+    width: 800px;
+    height: auto;
+    overflow: hidden;
 }
 
 h1 {
@@ -185,8 +185,9 @@ h2 {
 
 .calendar-day.current-day {
     background-color: #ffcccc; /* Light red */
-    border: 1px solid red;
+    border: 1px solid green;
 }
+
 .calendar-day.no-sessions {
     background: #f8d7da;
 }
@@ -261,10 +262,6 @@ h2 {
     pointer-events: none;
     -webkit-text-stroke: 1px red;
     color: transparent;
-}
-
-.calendar-day.current-day {
-    border: 1px solid green;
 }
 
 .changelog {

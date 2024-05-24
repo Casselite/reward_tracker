@@ -59,7 +59,7 @@ function loadSessionData() {
     const dateKey = getFormattedDate();
     const currentMonth = new Date().getMonth() + 1;
     const storedMonth = sessionData.currentMonth || currentMonth;
-    
+
     if (storedMonth !== currentMonth) {
         sessionData = { currentMonth: currentMonth };
         totalAmount = 0.00;
@@ -142,11 +142,9 @@ function toggleSession(sessionNumber) {
     updateProgressBar();
     updateCurrentDay();
 
-    if (wasActive !== sessionState[sessionNumber]) {
-        const soundToPlay = sessionNumber === 4 ? document.getElementById('specialClickSound') : document.getElementById('clickSound');
-        soundToPlay.currentTime = 0;
-        soundToPlay.play();
-    }
+    const soundToPlay = sessionNumber === 4 ? document.getElementById('specialClickSound') : document.getElementById('clickSound');
+    soundToPlay.currentTime = 0;
+    soundToPlay.play();
 }
 
 function calculateTotalAmount() {

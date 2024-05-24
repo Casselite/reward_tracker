@@ -131,6 +131,13 @@ h2 {
     margin-top: 10px;
     font-size: 18px;
     color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.total span {
+    margin: 0 10px;
 }
 
 .progress-container {

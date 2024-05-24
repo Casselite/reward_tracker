@@ -96,18 +96,16 @@ header h1 {
 }
 
 /* Hover styles for desktop */
-@media (hover: hover) and (pointer: fine) {
-    .session-button:hover:not(:disabled) {
-        background: #218838;
-        color: white;
-        border-color: #218838;
-    }
+.session-button:hover:not(:disabled) {
+    background: #218838;
+    color: white;
+    border-color: #218838;
 }
 
 /* Disable hover styles on mobile devices */
 @media (hover: none) and (pointer: coarse) {
     .session-button:hover {
-        background: transparent; /* Same as default background */
+        background: transparent; 
     }
 }
 

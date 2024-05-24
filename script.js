@@ -43,7 +43,6 @@ function saveSessionData() {
     sessionData[dateKey] = sessionsFinished;
     localStorage.setItem('sessionData', JSON.stringify(sessionData));
     localStorage.setItem('totalAmount', totalAmount.toFixed(2));
-    console.log('Data Saved: ', sessionData, 'Total Amount:', totalAmount.toFixed(2));
 }
 
 function loadSessionData() {
@@ -59,7 +58,6 @@ function loadSessionData() {
     updateTotalAmountDisplay();
     updateProgressBar();
     updateCalendarDays();
-    console.log('Data Loaded: ', sessionData, 'Total Amount:', totalAmount.toFixed(2));
 }
 
 function updateSessionStates() {
@@ -86,11 +84,13 @@ function resetSessionStates() {
 }
 
 function toggleSession(sessionNumber) {
+    const sessionButton = sessionButtons[sessionNumber];
+    let shouldPlayClickSound = false;
+
     if (sessionState[sessionNumber]) {
         for (let i = sessionNumber; i <= 4; i++) {
             if (sessionState[i]) {
-                totalAmount = (totalAmount - sessionValues[i]).toFixed(2);
-                totalAmount = parseFloat(totalAmount);
+                totalAmount -= sessionValues[i];
                 sessionState[i] = false;
                 sessionButtons[i].classList.remove('active');
             }
@@ -98,10 +98,10 @@ function toggleSession(sessionNumber) {
         }
         sessionsFinished = sessionNumber - 1;
     } else {
+        shouldPlayClickSound = true;
         for (let i = 1; i <= sessionNumber; i++) {
             if (!sessionState[i]) {
-                totalAmount = (totalAmount + sessionValues[i]).toFixed(2);
-                totalAmount = parseFloat(totalAmount);
+                totalAmount += sessionValues[i];
                 sessionState[i] = true;
                 sessionButtons[i].classList.add('active');
             }
@@ -118,12 +118,16 @@ function toggleSession(sessionNumber) {
     saveSessionData();
     updateProgressBar();
     updateCurrentDay();
-    console.log('Session Toggled: ', sessionNumber, 'Total Amount:', totalAmount.toFixed(2));
+
+    if (shouldPlayClickSound) {
+        const clickSound = sessionNumber === 4 ? document.getElementById('specialClickSound') : document.getElementById('clickSound');
+        clickSound.currentTime = 0;
+        clickSound.play();
+    }
 }
 
 function calculateTotalAmount() {
     let amount = 0;
-    console.log("Calculating Total Amount from: ", sessionData);
     for (const dateKey in sessionData) {
         for (let i = 1; i <= sessionData[dateKey]; i++) {
             amount += sessionValues[i];
@@ -174,7 +178,7 @@ function initializeCalendar() {
     const currentYear = currentDate.getFullYear();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-    calendarEl.innerHTML = ''; // Clear previous days if any
+    calendarEl.innerHTML = '';
     for (let day = 1; day <= daysInMonth; day++) {
         const dayContainerEl = document.createElement('div');
         dayContainerEl.classList.add('calendar-day-container');
@@ -245,7 +249,6 @@ function updateCalendarDays() {
 
         dayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions', 'inactive-day', 'current-day');
 
-        // Remove any previously added inactive mark
         if (dayEl.querySelector('.inactive-mark')) {
             dayEl.querySelector('.inactive-mark').remove();
         }
@@ -284,22 +287,32 @@ function updateCalendarDays() {
             }
         }
 
-        // Highlight the current day
         if (day === today) {
             dayEl.classList.add('current-day');
         }
     });
 }
 
-// Add event listeners to session buttons
 function setupSessionButtons() {
+    const clickSound = document.getElementById('clickSound');
+    const specialClickSound = document.getElementById('specialClickSound');
+    clickSound.volume = 0.2;
+    specialClickSound.volume = 0.2;
+
     for (let i = 1; i <= 4; i++) {
-        sessionButtons[i].addEventListener('click', () => toggleSession(i));
+        sessionButtons[i].addEventListener('click', () => {
+            const wasActive = sessionState[i];
+            toggleSession(i);
+            const isActive = sessionState[i];
+
+            if (!wasActive && isActive) {
+                const soundToPlay = i === 4 ? specialClickSound : clickSound;
+                soundToPlay.currentTime = 0;
+                soundToPlay.play();
+            }
+        });
     }
 }
-
-// Uncomment clearLocalStorage() to clear any previous data for consistent initial state
-// clearLocalStorage();
 
 function clearLocalStorage() {
     localStorage.clear();

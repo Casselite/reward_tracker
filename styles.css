@@ -7,7 +7,7 @@
     box-sizing: inherit;
 }
 
-
+/* Set default box-sizing to border-box */
 html {
     box-sizing: border-box;
 }
@@ -21,10 +21,10 @@ body {
     background-color: #f2f2f2;
     margin: 0;
     padding: 0;
-    overflow: hidden; 
+    overflow: hidden; /* Prevent scrolling */
 }
 
-
+/* Using the Inconsolata font with unique classes */
 .inconsolata-title {
     font-family: "Inconsolata", monospace;
     font-weight: 700;
@@ -95,10 +95,13 @@ header h1 {
     border-color: #28a745;
 }
 
-.session-button:hover:not(:disabled) {
-    background: #218838;
-    color: white;
-    border-color: #218838;
+/* Hover styles for desktop */
+@media (hover: hover) and (pointer: fine) {
+    .session-button:hover:not(:disabled) {
+        background: #218838;
+        color: white;
+        border-color: #218838;
+    }
 }
 
 .total {
@@ -166,7 +169,7 @@ header h1 {
 }
 
 .calendar-day.current-day {
-    background-color: #ffcccc; 
+    background-color: #ffcccc; /* Light red */
     border: 1px solid green;
 }
 

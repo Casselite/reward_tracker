@@ -10,28 +10,30 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="tracker">
-        <h1 class="inconsolata-title">Reward Tracker</h1>
-        <div class="session-buttons">
-            <button id="session1" class="session-button inconsolata-button">1</button>
-            <button id="session2" class="session-button inconsolata-button" disabled>2</button>
-            <button id="session3" class="session-button inconsolata-button" disabled>3</button>
-            <button id="session4" class="session-button inconsolata-button" disabled>4</button>
-        </div>
-        <div class="progress-container" title="">
-            <div id="progressBar" class="progress-bar"></div>
-        </div>
-        <div class="total inconsolata-total" id="totalContainer">
-            <span id="totalAmount">€0,00</span> of <span id="maxAmount">€0,00</span>
-        </div>
-        <div class="calendar">
-            <h2 id="currentMonth" class="inconsolata-month">MAY</h2>
-            <div id="calendar">
-        
+    <main class="tracker">
+        <header>
+            <h1 class="inconsolata-title">Reward Tracker</h1>
+        </header>
+        <section class="sessions">
+            <div class="session-buttons">
+                <button id="session1" class="session-button inconsolata-button">1</button>
+                <button id="session2" class="session-button inconsolata-button" disabled>2</button>
+                <button id="session3" class="session-button inconsolata-button" disabled>3</button>
+                <button id="session4" class="session-button inconsolata-button" disabled>4</button>
             </div>
-        </div>
-        <div class="changelog inconsolata-changelog">Version 1.3a</div>
-    </div>
+            <div class="progress-container" title="">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+            <div class="total inconsolata-total" id="totalContainer">
+                <span id="totalAmount">€0,00</span> of <span id="maxAmount">€0,00</span>
+            </div>
+        </section>
+        <section class="calendar">
+            <h2 id="currentMonth" class="inconsolata-month">MAY</h2>
+            <div id="calendar"></div>
+        </section>
+        <footer class="changelog inconsolata-changelog">Version 1.3b/footer>
+    </main>
 
     <!-- Audio elements for sounds -->
     <audio id="clickSound" src="coindrop.mp3" preload="auto" volume="0.4"></audio>

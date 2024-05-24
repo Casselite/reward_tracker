@@ -104,6 +104,13 @@ header h1 {
     }
 }
 
+/* Disable hover styles on mobile devices */
+@media (hover: none) and (pointer: coarse) {
+    .session-button:hover {
+        background: transparent; /* Same as default background */
+    }
+}
+
 .total {
     margin-top: 10px;
     font-size: 18px;

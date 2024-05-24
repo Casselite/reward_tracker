@@ -183,6 +183,10 @@ h2 {
     font-size: 18px;
 }
 
+.calendar-day.current-day {
+    background-color: #ffcccc; /* Light red */
+    border: 1px solid red;
+}
 .calendar-day.no-sessions {
     background: #f8d7da;
 }
@@ -266,9 +270,9 @@ h2 {
 .changelog {
     position: absolute;
     bottom: 5px;
-    right: 25px;
+    right: 5px;
     font-size: 10px;
-    color: #000;
+    color: #302e2e70;
     font-family: "Inconsolata", monospace;
     font-weight: 200;
     font-optical-sizing: auto;

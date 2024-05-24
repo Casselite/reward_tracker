@@ -109,7 +109,7 @@ function resetSessionStates() {
 
 function toggleSession(sessionNumber) {
     const sessionButton = sessionButtons[sessionNumber];
-    let shouldPlayClickSound = false;
+    const wasActive = sessionState[sessionNumber];
 
     if (sessionState[sessionNumber]) {
         for (let i = sessionNumber; i <= 4; i++) {
@@ -122,7 +122,6 @@ function toggleSession(sessionNumber) {
         }
         sessionsFinished = sessionNumber - 1;
     } else {
-        shouldPlayClickSound = true;
         for (let i = 1; i <= sessionNumber; i++) {
             if (!sessionState[i]) {
                 totalAmount += sessionValues[i];
@@ -143,10 +142,10 @@ function toggleSession(sessionNumber) {
     updateProgressBar();
     updateCurrentDay();
 
-    if (shouldPlayClickSound) {
-        const clickSound = sessionNumber === 4 ? document.getElementById('specialClickSound') : document.getElementById('clickSound');
-        clickSound.currentTime = 0;
-        clickSound.play();
+    if (wasActive !== sessionState[sessionNumber]) {
+        const soundToPlay = sessionNumber === 4 ? document.getElementById('specialClickSound') : document.getElementById('clickSound');
+        soundToPlay.currentTime = 0;
+        soundToPlay.play();
     }
 }
 
@@ -329,16 +328,7 @@ function setupSessionButtons() {
 
     for (let i = 1; i <= 4; i++) {
         sessionButtons[i].addEventListener('click', () => {
-            const wasActive = sessionState[i];
             toggleSession(i);
-            const isActive = sessionState[i];
-            console.log('Button Clicked:', i, 'wasActive:', wasActive, 'isActive:', isActive);
-
-            if (!wasActive && isActive) {
-                const soundToPlay = i === 4 ? specialClickSound : clickSound;
-                soundToPlay.currentTime = 0;
-                soundToPlay.play();
-            }
         });
     }
 }

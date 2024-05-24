@@ -24,40 +24,14 @@ body {
     overflow: hidden; /* Prevent scrolling */
 }
 
-/* Using the new Inconsolata font with unique classes */
+/* Using the Inconsolata font with unique classes */
 .inconsolata-title {
     font-family: "Inconsolata", monospace;
     font-weight: 700;
-    font-optical-sizing: auto;
-    font-variation-settings: "wdth" 100;
 }
 
-.inconsolata-button {
+.inconsolata-button, .inconsolata-total, .inconsolata-month, .inconsolata-changelog {
     font-family: "Inconsolata", monospace;
-    font-weight: 400;
-    font-optical-sizing: auto;
-    font-variation-settings: "wdth" 100;
-}
-
-.inconsolata-total {
-    font-family: "Inconsolata", monospace;
-    font-weight: 300;
-    font-optical-sizing: auto;
-    font-variation-settings: "wdth" 100;
-}
-
-.inconsolata-month {
-    font-family: "Inconsolata", monospace;
-    font-weight: 600;
-    font-optical-sizing: auto;
-    font-variation-settings: "wdth" 100;
-}
-
-.inconsolata-changelog {
-    font-family: "Inconsolata", monospace;
-    font-weight: 200;
-    font-optical-sizing: auto;
-    font-variation-settings: "wdth" 100;
 }
 
 .tracker {
@@ -66,7 +40,7 @@ body {
     padding: 20px;
     border-radius: 25px;
     border: 0.5px solid #000;
-    box-shadow: 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
     text-align: center;
     max-width: 100%;
     width: 800px;
@@ -74,16 +48,16 @@ body {
     overflow: hidden;
 }
 
-h1 {
-    margin: 0 0 5px;
+header h1 {
+    margin-bottom: 5px;
     color: transparent;
     -webkit-text-stroke: 0.5px black;
     letter-spacing: 5px;
     font-size: 55px;
 }
 
-h2 {
-    margin: 0 0 5px;
+.sessions h2, .calendar h2 {
+    margin-bottom: 5px;
     color: #218838;
     letter-spacing: 5px;
     font-size: 40px;
@@ -280,6 +254,35 @@ h2 {
     color: #000;
     font-family: "Inconsolata", monospace;
     font-weight: 300;
-    font-optical-sizing: auto;
-    font-variation-settings: "wdth" 100;
+}
+
+/* Responsive Design for Smaller Screens */
+@media (max-width: 768px) {
+    .tracker {
+        width: 100%;
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    header h1 {
+        font-size: 35px;
+    }
+
+    .sessions h2, .calendar h2 {
+        font-size: 25px;
+    }
+
+    .session-button {
+        font-size: 18px;
+        padding: 8px 0;
+    }
+
+    .calendar-day {
+        font-size: 14px;
+        height: 40px;
+    }
+
+    .session-count {
+        font-size: 25px;
+    }
 }

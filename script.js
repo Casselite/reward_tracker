@@ -52,7 +52,7 @@ function saveSessionData() {
     sessionData[dateKey] = sessionsFinished;
     localStorage.setItem('sessionData', JSON.stringify(sessionData));
     localStorage.setItem('totalAmount', totalAmount.toFixed(2));
-    console.log('Saving Data:', { totalAmount }); // Debugging log
+    console.log('Saving Data:', { totalAmount });
 }
 
 function loadSessionData() {
@@ -110,6 +110,7 @@ function resetSessionStates() {
 function toggleSession(sessionNumber) {
     const sessionButton = sessionButtons[sessionNumber];
     const wasActive = sessionState[sessionNumber];
+    let shouldPlayClickSound = !wasActive;
 
     if (sessionState[sessionNumber]) {
         for (let i = sessionNumber; i <= 4; i++) {
@@ -142,9 +143,11 @@ function toggleSession(sessionNumber) {
     updateProgressBar();
     updateCurrentDay();
 
-    const soundToPlay = sessionNumber === 4 ? document.getElementById('specialClickSound') : document.getElementById('clickSound');
-    soundToPlay.currentTime = 0;
-    soundToPlay.play();
+    if (shouldPlayClickSound) {
+        const soundToPlay = sessionNumber === 4 ? document.getElementById('specialClickSound') : document.getElementById('clickSound');
+        soundToPlay.currentTime = 0;
+        soundToPlay.play();
+    }
 }
 
 function calculateTotalAmount() {

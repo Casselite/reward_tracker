@@ -150,6 +150,15 @@ function toggleSession(sessionNumber) {
     }
 }
 
+// Add a helper function to handle both click and touch events
+function addClickAndTouchEvent(button, handler) {
+    button.addEventListener('click', handler);
+    button.addEventListener('touchend', (e) => {
+        e.preventDefault(); // Prevents triggering click event after touchend
+        handler(e);
+    });
+}
+
 function calculateTotalAmount() {
     let amount = 0;
     for (const dateKey in sessionData) {
@@ -328,7 +337,7 @@ function setupSessionButtons() {
     specialClickSound.volume = 0.2;
 
     for (let i = 1; i <= 4; i++) {
-        sessionButtons[i].addEventListener('click', () => {
+        addClickAndTouchEvent(sessionButtons[i], () => {
             const wasActive = sessionState[i];
             toggleSession(i);
             const isActive = sessionState[i];

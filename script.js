@@ -191,6 +191,8 @@ function initializeCalendar() {
         dayContainerEl.appendChild(dayNumberEl);
         calendarEl.appendChild(dayContainerEl);
     }
+    
+    updateCalendarDays();
 }
 
 function updateCurrentDay() {
@@ -199,6 +201,7 @@ function updateCurrentDay() {
     if (!currentDayEl) return;
 
     currentDayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions');
+    currentDayEl.classList.add('current-day');
 
     let sessionClass = '';
     switch (sessionsFinished) {
@@ -240,7 +243,7 @@ function updateCalendarDays() {
         const day = parseInt(dayEl.dataset.day, 10);
         const dateKey = `${currentYear}-${currentMonth}-${day}`;
 
-        dayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions', 'inactive-day');
+        dayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions', 'inactive-day', 'current-day');
 
         // Remove any previously added inactive mark
         if (dayEl.querySelector('.inactive-mark')) {
@@ -279,6 +282,11 @@ function updateCalendarDays() {
             if (day < today) {
                 dayEl.classList.add('inactive-day');
             }
+        }
+
+        // Highlight the current day
+        if (day === today) {
+            dayEl.classList.add('current-day');
         }
     });
 }

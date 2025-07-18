@@ -12,8 +12,16 @@
 <body>
     <main class="tracker">
         <header>
-            <h1 class="inconsolata-title">Reward Tracker</h1>
+            <h1 id="habitTitle" class="inconsolata-title" contenteditable="true" title="Click to name your habit!">
+                Reward Tracker
+            </h1>
+            <div class="streaks-container inconsolata-total">
+                <span>Streak: <span id="currentStreak">0</span> days</span>
+                <span>🔥</span>
+                <span>Longest: <span id="longestStreak">0</span> days</span>
+            </div>
         </header>
+
         <section class="sessions">
             <div class="session-buttons">
                 <button id="session1" class="session-button inconsolata-button">1</button>
@@ -22,7 +30,7 @@
                 <button id="session4" class="session-button inconsolata-button" disabled>4</button>
             </div>
             <div class="progress-container" title="">
-                <div id="progressBar" 
+                <div id="progressBar"
                      class="progress-bar"
                      role="progressbar"
                      aria-valuenow="0"
@@ -34,16 +42,39 @@
                 <span id="totalAmount">€0,00</span> of <span id="maxAmount">€0,00</span>
             </div>
         </section>
+
         <section class="calendar">
-            <h2 id="currentMonth" class="inconsolata-month">MAY</h2>
+            <h2 id="currentMonth" class="inconsolata-month">JULY</h2>
             <div id="calendar"></div>
         </section>
-        <footer class="changelog inconsolata-changelog">Version 2.1</footer>
+
+        <footer class="changelog inconsolata-changelog">Version 3.1</footer>
     </main>
+
+    <!-- Achievement Notification Pop-up -->
+    <div id="achievementNotification" class="notification">
+        <div class="notification-icon">🎉</div>
+        <div class="notification-content">
+            <div class="notification-title">Achievement Unlocked!</div>
+            <div id="achievementName" class="notification-text"></div>
+        </div>
+    </div>
+
+    <!-- Daily Note Modal -->
+    <div id="noteModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="noteModalTitle">Note for July 18</h3>
+            <textarea id="noteTextarea" placeholder="How did it go today? Any thoughts?"></textarea>
+            <div class="modal-buttons">
+                <button id="saveNoteButton">Save</button>
+                <button id="closeNoteButton">Close</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Audio elements for sounds -->
     <audio id="clickSound" src="coindrop.mp3" preload="auto"></audio>
-    <audio id="specialClickSound" src="success.mp3" preload="auto"></audio>
+    <audio id="specialClickSound"src="success.mp3" preload="auto"></audio>
 
     <script src="script.js"></script>
 </body>

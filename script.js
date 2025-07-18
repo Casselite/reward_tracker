@@ -1,124 +1,103 @@
-// Wrap script in an IIFE to create a private scope and avoid global variables.
+// Wrap script in an IIFE to create a private scope.
 (function() {
-    'use strict'; // Enforce stricter parsing and error handling.
+    'use strict';
 
     // --- DOM Elements ---
+    const habitTitleElement = document.getElementById('habitTitle');
     const totalAmountElement = document.getElementById('totalAmount');
     const maxAmountElement = document.getElementById('maxAmount');
     const progressBar = document.getElementById('progressBar');
     const progressContainer = document.querySelector('.progress-container');
-    const sessionButtons = {
-        1: document.getElementById('session1'),
-        2: document.getElementById('session2'),
-        3: document.getElementById('session3'),
-        4: document.getElementById('session4')
-    };
+    const sessionButtons = { 1: document.getElementById('session1'), 2: document.getElementById('session2'), 3: document.getElementById('session3'), 4: document.getElementById('session4') };
     const clickSound = document.getElementById('clickSound');
     const specialClickSound = document.getElementById('specialClickSound');
+    const currentStreakEl = document.getElementById('currentStreak');
+    const longestStreakEl = document.getElementById('longestStreak');
+    const achievementNotificationEl = document.getElementById('achievementNotification');
+    const achievementNameEl = document.getElementById('achievementName');
+    const noteModal = document.getElementById('noteModal');
+    const noteModalTitle = document.getElementById('noteModalTitle');
+    const noteTextarea = document.getElementById('noteTextarea');
+    const saveNoteButton = document.getElementById('saveNoteButton');
+    const closeNoteButton = document.getElementById('closeNoteButton');
 
     // --- State & Constants ---
     let totalAmount = 0.00;
     let sessionsFinished = 0;
-    let sessionData = {}; // Initialized in loadSessionData
-    const sessionState = { 1: false, 2: false, 3: false, 4: false };
+    let sessionData = {}; // Data for calendar days (sessions, notes)
+    let trackerState = {}; // Data for streaks and achievements
+    let currentlyEditingDateKey = null; // To track which day's note is being edited
     const sessionValues = { 1: 0.10, 2: 0.42, 3: 1.12, 4: 1.68 };
     const maxAmountPerDay = 3.32;
+    const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    // --- Achievements Definitions ---
+    const ACHIEVEMENTS = {
+        PERFECT_DAY: { name: "Perfect Day!", description: "Complete all 4 sessions in one day." },
+        STREAK_7: { name: "7-Day Streak!", description: "Maintain a streak for 7 days." },
+        STREAK_30: { name: "30-Day Streak!", description: "Maintain a streak for a whole month." },
+        FIRST_10: { name: "First €10 Earned!", description: "Earn your first €10." },
+        PERFECT_WEEK: { name: "Perfect Week!", description: "Complete all 4 sessions every day for 7 days." }
+    };
 
     // --- Core Functions ---
 
-    /**
-     * Initializes the application when the DOM is fully loaded.
-     */
     function initialize() {
         const now = new Date();
-        loadSessionData(now);
+        loadData(now);
         initializeCalendar(now);
-        setupSessionButtons();
+        setupEventListeners();
         updateCurrentMonthDisplay(now);
+        updateAllUI();
     }
+    
+    function loadData(currentDate) {
+        const savedTitle = localStorage.getItem('habitTitle');
+        if (savedTitle) habitTitleElement.textContent = savedTitle;
 
-    /**
-     * Loads session data from localStorage, handling month changes.
-     */
-    function loadSessionData(currentDate) {
-        try {
-            sessionData = JSON.parse(localStorage.getItem('sessionData')) || {};
-        } catch (e) {
-            console.error('Failed to parse session data from localStorage.', e);
-            sessionData = {};
-        }
+        try { sessionData = JSON.parse(localStorage.getItem('sessionData')) || {}; } catch (e) { console.error('Failed to parse session data.', e); sessionData = {}; }
+        try { trackerState = JSON.parse(localStorage.getItem('trackerState')) || { longestStreak: 0, unlockedAchievements: [] }; } catch (e) { console.error('Failed to parse tracker state.', e); trackerState = { longestStreak: 0, unlockedAchievements: [] }; }
 
         const currentMonth = currentDate.getMonth() + 1;
         const storedMonth = sessionData.currentMonth || currentMonth;
-
-        // If the month has changed, reset all data.
         if (storedMonth !== currentMonth) {
             sessionData = { currentMonth: currentMonth };
-            totalAmount = 0.00;
-            sessionsFinished = 0;
-            saveSessionData(); // Save the cleared state
+            saveData('sessionData');
         }
-        
-        // Recalculate total amount from stored data
-        totalAmount = calculateTotalAmount();
 
         const dateKey = getFormattedDate(currentDate);
-        if (sessionData[dateKey]) {
-            sessionsFinished = sessionData[dateKey];
-        }
-
-        updateAllUI();
+        sessionsFinished = (sessionData[dateKey] && sessionData[dateKey].sessions) ? sessionData[dateKey].sessions : 0;
     }
 
-    /**
-     * Saves the current session data and total amount to localStorage.
-     */
-    function saveSessionData() {
+    function saveData(key) {
         try {
-            const dateKey = getFormattedDate(new Date());
-            sessionData[dateKey] = sessionsFinished;
-            localStorage.setItem('sessionData', JSON.stringify(sessionData));
+            if (key === 'sessionData') {
+                const dateKey = getFormattedDate(new Date());
+                if (!sessionData[dateKey]) sessionData[dateKey] = {};
+                sessionData[dateKey].sessions = sessionsFinished;
+                localStorage.setItem('sessionData', JSON.stringify(sessionData));
+            } else if (key === 'trackerState') {
+                localStorage.setItem('trackerState', JSON.stringify(trackerState));
+            } else if (key === 'habitTitle') {
+                localStorage.setItem('habitTitle', habitTitleElement.textContent);
+            }
         } catch (e) {
-            console.error('Failed to save session data to localStorage.', e);
-            // Optionally, inform the user that progress cannot be saved.
+            console.error(`Failed to save ${key} to localStorage.`, e);
         }
     }
-
-    /**
-     * Toggles the state of a session button (on/off).
-     * This function is complex because toggling a session off also
-     * toggles off all subsequent sessions for that day.
-     */
-    function toggleSession(sessionNumber) {
-        const wasActive = sessionState[sessionNumber];
-
-        // --- Logic for Turning Sessions OFF ---
-        // If the clicked session was already active, turn it and all subsequent sessions off.
-        if (wasActive) {
-            for (let i = sessionNumber; i <= 4; i++) {
-                if (sessionState[i]) {
-                    sessionState[i] = false;
-                }
-            }
-            sessionsFinished = sessionNumber - 1;
-        }
-        // --- Logic for Turning Sessions ON ---
-        // If the clicked session was not active, turn it and all preceding sessions on.
-        else {
-            for (let i = 1; i <= sessionNumber; i++) {
-                if (!sessionState[i]) {
-                    sessionState[i] = true;
-                }
-            }
-            sessionsFinished = sessionNumber;
-        }
-
-        // Recalculate total amount and update everything
+    
+    function handleUpdate() {
         totalAmount = calculateTotalAmount();
-        saveSessionData();
+        saveData('sessionData');
         updateAllUI();
-        
-        // Play sound effect only when activating a session.
+        updateStreaks();
+        checkAchievements();
+    }
+
+    function toggleSession(sessionNumber) {
+        const wasActive = sessionNumber <= sessionsFinished;
+        sessionsFinished = wasActive ? sessionNumber - 1 : sessionNumber;
+        handleUpdate();
         if (!wasActive) {
             const soundToPlay = sessionNumber === 4 ? specialClickSound : clickSound;
             soundToPlay.currentTime = 0;
@@ -128,54 +107,39 @@
 
     // --- UI Update Functions ---
 
-    /**
-     * A single function to refresh all parts of the UI.
-     */
     function updateAllUI() {
-        updateSessionButtonsAndState();
+        updateSessionButtons();
         updateTotalAmountDisplay();
         updateProgressBar();
         updateCalendarDays();
+        updateStreakDisplay();
     }
 
-    /**
-     * Updates the active/disabled state of the four session buttons.
-     */
-    function updateSessionButtonsAndState() {
+    function updateSessionButtons() {
         for (let i = 1; i <= 4; i++) {
-            sessionState[i] = (i <= sessionsFinished);
-            sessionButtons[i].classList.toggle('active', sessionState[i]);
+            sessionButtons[i].classList.toggle('active', i <= sessionsFinished);
             sessionButtons[i].disabled = i > (sessionsFinished + 1);
         }
-        sessionButtons[1].disabled = false; // Session 1 is always clickable.
+        sessionButtons[1].disabled = false;
     }
     
-    /**
-     * Updates the total amount and max amount display.
-     */
     function updateTotalAmountDisplay() {
         const maxAmount = calculateMaxAmount(new Date());
         totalAmountElement.textContent = formatCurrency(totalAmount);
         maxAmountElement.textContent = formatCurrency(maxAmount);
     }
     
-    /**
-     * Updates the progress bar width and tooltip.
-     * BUG FIX: This function now correctly calculates total sessions.
-     */
     function updateProgressBar() {
         const currentDate = new Date();
         const maxAmount = calculateMaxAmount(currentDate);
         const progressPercentage = maxAmount > 0 ? (totalAmount / maxAmount) * 100 : 0;
-        
         progressBar.style.width = `${progressPercentage}%`;
         progressBar.setAttribute('aria-valuenow', progressPercentage.toFixed(0));
 
-        // Correctly calculate total sessions done this month for the tooltip.
         let totalSessionsDone = 0;
         for (const key in sessionData) {
-            if (key !== 'currentMonth') { // Exclude the month tracker from the sum
-                totalSessionsDone += sessionData[key];
+            if (key !== 'currentMonth' && sessionData[key].sessions) {
+                totalSessionsDone += sessionData[key].sessions;
             }
         }
 
@@ -185,7 +149,7 @@
     }
 
     /**
-     * Updates the visual state of all days in the calendar.
+     * CORRECTED FUNCTION: Styles calendar days for past, present, and future.
      */
     function updateCalendarDays() {
         const today = new Date();
@@ -196,25 +160,27 @@
         document.querySelectorAll('.calendar-day').forEach(dayEl => {
             const day = parseInt(dayEl.dataset.day, 10);
             const dateKey = `${currentYear}-${currentMonth}-${day}`;
-            const sessionsForDay = sessionData[dateKey] || 0;
-
-            // Reset classes
-            dayEl.className = 'calendar-day';
+            const dayData = sessionData[dateKey] || {};
+            const sessionsForDay = dayData.sessions || 0;
+            const noteForDay = dayData.note || '';
             
-            // Add session class
-            dayEl.classList.add(getSessionClass(sessionsForDay));
+            dayEl.className = 'calendar-day'; // Reset classes completely
 
-            // Mark past, uncompleted days
-            if (sessionsForDay === 0 && day < todayDate) {
-                dayEl.classList.add('inactive-day');
-            }
-
-            // Highlight the current day
-            if (day === todayDate) {
+            if (day < todayDate) {
+                // Logic for PAST days
+                dayEl.classList.add(getSessionClass(sessionsForDay));
+                if (sessionsForDay === 0) {
+                    dayEl.classList.add('inactive-day'); // Mark missed past days
+                }
+            } else if (day === todayDate) {
+                // Logic for CURRENT day
                 dayEl.classList.add('current-day');
+                dayEl.classList.add(getSessionClass(sessionsForDay));
+            } else {
+                // Logic for FUTURE days - no special classes needed, remains neutral
             }
             
-            // Update the Roman numeral display
+            // Update Roman numerals for all days
             let sessionCountEl = dayEl.querySelector('.session-count');
             if (!sessionCountEl) {
                 sessionCountEl = document.createElement('div');
@@ -223,25 +189,124 @@
             }
             const romanNumerals = ['I', 'II', 'III', 'IV'];
             sessionCountEl.textContent = sessionsForDay > 0 ? romanNumerals[sessionsForDay - 1] : '';
+
+            // Update note indicator for all days
+            let noteIndicatorEl = dayEl.querySelector('.note-indicator');
+            if (noteForDay && !noteIndicatorEl) {
+                noteIndicatorEl = document.createElement('div');
+                noteIndicatorEl.className = 'note-indicator';
+                dayEl.appendChild(noteIndicatorEl);
+            } else if (!noteForDay && noteIndicatorEl) {
+                noteIndicatorEl.remove();
+            }
         });
     }
+    
+    // --- New Feature Functions ---
 
-    // --- Helper & Setup Functions ---
+    function updateStreaks() {
+        let currentStreak = 0;
+        const today = new Date();
+        for (let i = 0; i < 365; i++) {
+            const dateToCheck = new Date(today);
+            dateToCheck.setDate(today.getDate() - i);
+            const dateKey = getFormattedDate(dateToCheck);
+            if (sessionData[dateKey] && sessionData[dateKey].sessions > 0) {
+                currentStreak++;
+            } else {
+                break;
+            }
+        }
+        if (currentStreak > trackerState.longestStreak) trackerState.longestStreak = currentStreak;
+        trackerState.currentStreak = currentStreak;
+        saveData('trackerState');
+        updateStreakDisplay();
+    }
 
-    /**
-     * Recalculates the total amount based on the entire sessionData object.
-     */
+    function updateStreakDisplay() {
+        currentStreakEl.textContent = trackerState.currentStreak || 0;
+        longestStreakEl.textContent = trackerState.longestStreak || 0;
+    }
+
+    function checkAchievements() {
+        const todayData = sessionData[getFormattedDate(new Date())] || {};
+        if (todayData.sessions === 4) unlockAchievement('PERFECT_DAY');
+        if (trackerState.currentStreak >= 7) unlockAchievement('STREAK_7');
+        if (trackerState.currentStreak >= 30) unlockAchievement('STREAK_30');
+        if (totalAmount >= 10) unlockAchievement('FIRST_10');
+        if (isPerfectWeek()) unlockAchievement('PERFECT_WEEK');
+    }
+    
+    function isPerfectWeek() {
+        const today = new Date();
+        for (let i = 0; i < 7; i++) {
+            const dateToCheck = new Date(today);
+            dateToCheck.setDate(today.getDate() - i);
+            const dateKey = getFormattedDate(dateToCheck);
+            if (!sessionData[dateKey] || sessionData[dateKey].sessions !== 4) return false;
+        }
+        return true;
+    }
+
+    function unlockAchievement(id) {
+        if (!trackerState.unlockedAchievements.includes(id)) {
+            trackerState.unlockedAchievements.push(id);
+            saveData('trackerState');
+            showAchievementNotification(ACHIEVEMENTS[id].name);
+        }
+    }
+    
+    function showAchievementNotification(name) {
+        achievementNameEl.textContent = name;
+        achievementNotificationEl.classList.add('show');
+        setTimeout(() => { achievementNotificationEl.classList.remove('show'); }, 4000);
+    }
+
+    function openNoteModal(dateKey) {
+        currentlyEditingDateKey = dateKey;
+        const dateParts = dateKey.split('-');
+        noteModalTitle.textContent = `Note for ${MONTH_NAMES[parseInt(dateParts[1], 10) - 1]} ${dateParts[2]}`;
+        noteTextarea.value = (sessionData[dateKey] && sessionData[dateKey].note) || '';
+        noteModal.classList.add('show');
+        noteTextarea.focus();
+    }
+
+    function closeNoteModal() {
+        noteModal.classList.remove('show');
+        currentlyEditingDateKey = null;
+    }
+
+    function saveNote() {
+        if (!currentlyEditingDateKey) return;
+        if (!sessionData[currentlyEditingDateKey]) sessionData[currentlyEditingDateKey] = { sessions: 0 };
+        sessionData[currentlyEditingDateKey].note = noteTextarea.value.trim();
+        saveData('sessionData');
+        closeNoteModal();
+        updateCalendarDays();
+    }
+
+    // --- Helper Functions ---
+
     function calculateTotalAmount() {
         let amount = 0;
         for (const dateKey in sessionData) {
-            if (dateKey !== "currentMonth") {
-                const dailySessions = sessionData[dateKey];
+            if (dateKey !== "currentMonth" && sessionData[dateKey].sessions) {
+                const dailySessions = sessionData[dateKey].sessions;
                 for (let i = 1; i <= dailySessions; i++) {
                     amount += sessionValues[i];
                 }
             }
         }
         return parseFloat(amount.toFixed(2));
+    }
+    
+    function setupEventListeners() {
+        for (let i = 1; i <= 4; i++) sessionButtons[i].addEventListener('click', () => toggleSession(i));
+        habitTitleElement.addEventListener('blur', () => saveData('habitTitle'));
+        habitTitleElement.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); habitTitleElement.blur(); } });
+        saveNoteButton.addEventListener('click', saveNote);
+        closeNoteButton.addEventListener('click', closeNoteModal);
+        noteModal.addEventListener('click', (e) => { if (e.target === noteModal) closeNoteModal(); });
     }
 
     function initializeCalendar(currentDate) {
@@ -250,37 +315,25 @@
         const year = currentDate.getFullYear();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        calendarEl.innerHTML = ''; // Clear previous calendar
+        calendarEl.innerHTML = '';
         for (let day = 1; day <= daysInMonth; day++) {
             const dayContainerEl = document.createElement('div');
             dayContainerEl.classList.add('calendar-day-container');
-
             const dayEl = document.createElement('div');
             dayEl.classList.add('calendar-day');
             dayEl.dataset.day = day;
-
+            dayEl.addEventListener('click', () => { openNoteModal(`${year}-${month + 1}-${day}`); });
             const dayNumberEl = document.createElement('div');
             dayNumberEl.classList.add('day-number');
             dayNumberEl.textContent = day;
-
             dayContainerEl.appendChild(dayEl);
             dayContainerEl.appendChild(dayNumberEl);
             calendarEl.appendChild(dayContainerEl);
         }
     }
 
-    function setupSessionButtons() {
-        clickSound.volume = 0.2;
-        specialClickSound.volume = 0.2;
-
-        for (let i = 1; i <= 4; i++) {
-            sessionButtons[i].addEventListener('click', () => toggleSession(i));
-        }
-    }
-
     function updateCurrentMonthDisplay(currentDate) {
-        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        document.getElementById('currentMonth').textContent = monthNames[currentDate.getMonth()];
+        document.getElementById('currentMonth').textContent = MONTH_NAMES[currentDate.getMonth()];
     }
 
     function calculateMaxAmount(currentDate) {
@@ -297,16 +350,9 @@
     }
 
     function getSessionClass(sessionCount) {
-        const classMap = {
-            1: 'one-session',
-            2: 'two-sessions',
-            3: 'three-sessions',
-            4: 'four-sessions'
-        };
+        const classMap = { 1: 'one-session', 2: 'two-sessions', 3: 'three-sessions', 4: 'four-sessions' };
         return classMap[sessionCount] || 'no-sessions';
     }
 
-    // --- Event Listener ---
     document.addEventListener('DOMContentLoaded', initialize);
-
 })();

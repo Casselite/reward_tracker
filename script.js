@@ -4,227 +4,6 @@
     // --- DOM Elements ---
     const habitTitleElement = document.getElementById('habitTitle');
     const sessionButtonsContainer = document.getElementById('sessionButtonsContainer');
-    // (Existing DOM elements)
-    const settingsButton = document.getElementById('settingsButton');
-    const achievementsButton = document.getElementById('achievementsButton');
-    const settingsModal = document.getElementById('settingsModal');
-    const achievementsModal = document.getElementById('achievementsModal');
-    const dailyGoalInput = document.getElementById('dailyGoalInput');
-    const saveSettingsButton = document.getElementById('saveSettingsButton');
-    const closeSettingsButton = document.getElementById('closeSettingsButton');
-    const achievementsList = document.getElementById('achievementsList');
-    const closeAchievementsButton = document.getElementById('closeAchievementsButton');
-    // (The rest of the DOM elements)
-    let sessionButtons = {}; // Populated dynamically
-
-    // --- State & Constants ---
-    let trackerState = {}; // Now holds dailyGoal, streaks, etc.
-    // (The rest of the state variables)
-    let lastKnownDate = getFormattedDate(new Date());
-
-    const ACHIEVEMENTS = {
-        PERFECT_DAY: { name: "Perfect Day!", description: "Complete all sessions for your daily goal.", icon: "🎯" },
-        STREAK_7: { name: "7-Day Streak!", description: "Maintain a streak for 7 days.", icon: "🔥" },
-        STREAK_30: { name: "30-Day Streak!", description: "Maintain a streak for a whole month.", icon: "🚀" },
-        FIRST_10: { name: "First €10 Earned!", description: "Earn your first €10.", icon: "💰" },
-        PERFECT_WEEK: { name: "Perfect Week!", description: "Complete your daily goal every day for 7 days.", icon: "🌟" }
-    };
-    
-    // --- Core Functions ---
-
-    function initialize() {
-        const now = new Date();
-        loadData();
-        buildSessionButtons(); // Build buttons based on settings
-        initializeDayState(now);
-        initializeCalendar(now);
-        setupEventListeners();
-        updateCurrentMonthDisplay(now);
-        updateAllUI();
-        setInterval(checkForDateChange, 300000); 
-    }
-
-    function loadData() {
-        const savedTitle = localStorage.getItem('habitTitle');
-        if (savedTitle) habitTitleElement.textContent = savedTitle;
-        try { sessionData = JSON.parse(localStorage.getItem('sessionData')) || {}; } catch (e) { sessionData = {}; }
-        
-        // Load tracker state with defaults
-        const defaultTrackerState = { dailyGoal: 4, longestStreak: 0, unlockedAchievements: [] };
-        try { trackerState = { ...defaultTrackerState, ...JSON.parse(localStorage.getItem('trackerState')) }; } catch (e) { trackerState = defaultTrackerState; }
-    }
-    
-    // (The rest of the core functions like saveData, handleUpdate, etc. are largely the same but now use trackerState.dailyGoal)
-    function handleUpdate() {
-        const dateKey = getFormattedDate(new Date());
-        if (!sessionData[dateKey]) sessionData[dateKey] = {};
-        sessionData[dateKey].sessions = sessionsFinished;
-
-        totalAmount = calculateTotalAmount();
-        updateStreaks();
-        checkAchievements();
-
-        saveData('sessionData');
-        saveData('trackerState');
-        updateAllUI();
-    }
-    
-    // --- UI Update Functions ---
-    
-    function updateAllUI() {
-        updateSessionButtons();
-        updateTotalAmountDisplay();
-        updateProgressBar();
-        updateCalendarDays();
-        updateStreakDisplay();
-    }
-
-    function updateSessionButtons() {
-        for (let i = 1; i <= 4; i++) {
-            const button = sessionButtons[i];
-            if (button) {
-                // Show/hide button based on goal
-                button.style.display = i <= trackerState.dailyGoal ? 'flex' : 'none';
-                
-                // Update active/disabled state
-                button.classList.toggle('active', i <= sessionsFinished);
-                button.disabled = i > (sessionsFinished + 1);
-            }
-        }
-        if (sessionButtons[1]) sessionButtons[1].disabled = false;
-    }
-
-    function updateTotalAmountDisplay() {
-        const maxAmount = calculateMaxAmount(new Date());
-        totalAmountElement.textContent = formatCurrency(totalAmount);
-        maxAmountElement.textContent = formatCurrency(maxAmount);
-    }
-    
-    // --- New Feature Functions ---
-
-    function openSettingsModal() {
-        dailyGoalInput.value = trackerState.dailyGoal;
-        settingsModal.classList.add('show');
-    }
-    function closeSettingsModal() { settingsModal.classList.remove('show'); }
-    function saveSettings() {
-        const newGoal = parseInt(dailyGoalInput.value, 10);
-        if (newGoal >= 1 && newGoal <= 4) {
-            trackerState.dailyGoal = newGoal;
-            // If user lowers the goal, cap their current sessions
-            if (sessionsFinished > newGoal) {
-                sessionsFinished = newGoal;
-            }
-            handleUpdate();
-        }
-        closeSettingsModal();
-    }
-
-    function openAchievementsModal() {
-        populateAchievementsModal();
-        achievementsModal.classList.add('show');
-    }
-    function closeAchievementsModal() { achievementsModal.classList.remove('show'); }
-    
-    function populateAchievementsModal() {
-        achievementsList.innerHTML = '';
-        for (const id in ACHIEVEMENTS) {
-            const achievement = ACHIEVEMENTS[id];
-            const isUnlocked = trackerState.unlockedAchievements.includes(id);
-
-            const item = document.createElement('div');
-            item.className = `achievement-item ${isUnlocked ? 'unlocked' : 'locked'}`;
-            
-            item.innerHTML = `
-                <div class="achievement-icon">${achievement.icon}</div>
-                <div class="achievement-details">
-                    <h4>${achievement.name}</h4>
-                    <p>${achievement.description}</p>
-                </div>
-            `;
-            achievementsList.appendChild(item);
-        }
-    }
-
-    // --- Helper Functions ---
-
-    function buildSessionButtons() {
-        sessionButtonsContainer.innerHTML = '';
-        sessionButtons = {}; // Clear old references
-        for (let i = 1; i <= 4; i++) {
-            const button = document.createElement('button');
-            button.id = `session${i}`;
-            button.className = 'session-button inconsolata-button';
-            button.textContent = i;
-            button.addEventListener('click', () => toggleSession(i));
-            sessionButtonsContainer.appendChild(button);
-            sessionButtons[i] = button;
-        }
-    }
-
-    function calculateAmountForSessions(numSessions) {
-        let amount = 0;
-        for (let i = 1; i <= numSessions; i++) {
-            amount += sessionValues[i];
-        }
-        return amount;
-    }
-
-    function calculateMaxAmount(currentDate) {
-        const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-        return daysInMonth * calculateAmountForSessions(trackerState.dailyGoal);
-    }
-    
-    function checkAchievements() {
-        const todayData = sessionData[getFormattedDate(new Date())] || {};
-        // Check for Perfect Day based on custom goal
-        if (todayData.sessions === trackerState.dailyGoal && trackerState.dailyGoal > 0) {
-            unlockAchievement('PERFECT_DAY');
-        }
-        if (isPerfectWeek()) unlockAchievement('PERFECT_WEEK');
-        // (Other achievement checks are the same)
-        if (trackerState.currentStreak >= 7) unlockAchievement('STREAK_7');
-        if (trackerState.currentStreak >= 30) unlockAchievement('STREAK_30');
-        if (totalAmount >= 10) unlockAchievement('FIRST_10');
-    }
-
-    function isPerfectWeek() {
-        if (trackerState.dailyGoal === 0) return false;
-        const today = new Date();
-        for (let i = 0; i < 7; i++) {
-            const dateToCheck = new Date(today);
-            dateToCheck.setDate(today.getDate() - i);
-            const dateKey = getFormattedDate(dateToCheck);
-            if (!sessionData[dateKey] || sessionData[dateKey].sessions !== trackerState.dailyGoal) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    function setupEventListeners() {
-        // (All existing event listeners for title, notes, etc. remain the same)
-        settingsButton.addEventListener('click', openSettingsModal);
-        closeSettingsButton.addEventListener('click', closeSettingsModal);
-        saveSettingsButton.addEventListener('click', saveSettings);
-
-        achievementsButton.addEventListener('click', openAchievementsModal);
-        closeAchievementsButton.addEventListener('click', closeAchievementsModal);
-    }
-    
-    // --- (All other functions from the last robust version are here and largely unchanged) ---
-    // Make sure to include the full, working versions of:
-    // initializeDayState, checkForDateChange, toggleSession, all update... functions,
-    // all modal functions, and all helper functions from the previous final script.
-    
-    // For completeness, here is the full script again.
-    // Replace EVERYTHING in your script.js with this:
-    (function() {
-    'use strict';
-
-    // --- DOM Elements ---
-    const habitTitleElement = document.getElementById('habitTitle');
-    const sessionButtonsContainer = document.getElementById('sessionButtonsContainer');
     const totalAmountElement = document.getElementById('totalAmount');
     const maxAmountElement = document.getElementById('maxAmount');
     const progressBar = document.getElementById('progressBar');
@@ -261,11 +40,21 @@
     const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     
     const ACHIEVEMENTS = {
+        // Core Achievements
         PERFECT_DAY: { name: "Perfect Day!", description: "Complete all sessions for your daily goal.", icon: "🎯" },
         PERFECT_WEEK: { name: "Perfect Week!", description: "Complete your daily goal every day for 7 days.", icon: "🌟" },
+        // Streak Milestones
         STREAK_7: { name: "7-Day Streak!", description: "Maintain a streak for 7 days.", icon: "🔥" },
         STREAK_30: { name: "30-Day Streak!", description: "Maintain a streak for a whole month.", icon: "🚀" },
+        // Financial Milestones
         FIRST_10: { name: "First €10 Earned!", description: "Earn your first €10.", icon: "💰" },
+        HIGH_ROLLER: { name: "High Roller", description: "Earn a total of €50 in rewards.", icon: "💎" },
+        // Monthly & Recovery
+        PERFECT_MONTH: { name: "Perfect Month", description: "Complete your daily goal every day of a calendar month.", icon: "👑" },
+        BACK_ON_TRACK: { name: "Back in the Saddle", description: "Start a new 3-day streak after breaking one of 7+ days.", icon: "🌱" },
+        // Engagement
+        FIRST_NOTE: { name: "First Words", description: "Write a note for any day in the calendar.", icon: "✍️" },
+        CUSTOM_TITLE: { name: "Making It Yours", description: "Change the default title to a custom habit name.", icon: "✨" }
     };
 
     // --- Core Functions ---
@@ -294,7 +83,7 @@
         const savedTitle = localStorage.getItem('habitTitle');
         if (savedTitle) habitTitleElement.textContent = savedTitle;
         try { sessionData = JSON.parse(localStorage.getItem('sessionData')) || {}; } catch (e) { sessionData = {}; }
-        const defaultTrackerState = { dailyGoal: 4, longestStreak: 0, unlockedAchievements: [] };
+        const defaultTrackerState = { dailyGoal: 4, longestStreak: 0, unlockedAchievements: [], lastBrokenStreakLength: 0 };
         try { trackerState = { ...defaultTrackerState, ...JSON.parse(localStorage.getItem('trackerState')) }; } catch (e) { trackerState = defaultTrackerState; }
     }
 
@@ -418,12 +207,16 @@
     }
 
     function updateStreaks() {
+        const oldStreak = trackerState.currentStreak || 0;
         let currentStreak = 0; const today = new Date();
         for (let i = 0; i < 365; i++) {
             const dateToCheck = new Date(today); dateToCheck.setDate(today.getDate() - i);
             const dateKey = getFormattedDate(dateToCheck);
             if (sessionData[dateKey] && sessionData[dateKey].sessions > 0) currentStreak++;
             else break;
+        }
+        if (currentStreak === 0 && oldStreak > 0) {
+            trackerState.lastBrokenStreakLength = oldStreak;
         }
         if (currentStreak > trackerState.longestStreak) trackerState.longestStreak = currentStreak;
         trackerState.currentStreak = currentStreak;
@@ -438,9 +231,12 @@
         const todayData = sessionData[getFormattedDate(new Date())] || {};
         if (trackerState.dailyGoal > 0 && todayData.sessions === trackerState.dailyGoal) unlockAchievement('PERFECT_DAY');
         if (isPerfectWeek()) unlockAchievement('PERFECT_WEEK');
+        if (isPerfectMonth()) unlockAchievement('PERFECT_MONTH');
         if (trackerState.currentStreak >= 7) unlockAchievement('STREAK_7');
         if (trackerState.currentStreak >= 30) unlockAchievement('STREAK_30');
         if (totalAmount >= 10) unlockAchievement('FIRST_10');
+        if (totalAmount >= 50) unlockAchievement('HIGH_ROLLER');
+        if (trackerState.currentStreak >= 3 && trackerState.lastBrokenStreakLength >= 7) unlockAchievement('BACK_ON_TRACK');
     }
 
     function isPerfectWeek() {
@@ -449,6 +245,19 @@
         for (let i = 0; i < 7; i++) {
             const dateToCheck = new Date(today); dateToCheck.setDate(today.getDate() - i);
             const dateKey = getFormattedDate(dateToCheck);
+            if (!sessionData[dateKey] || sessionData[dateKey].sessions !== trackerState.dailyGoal) return false;
+        }
+        return true;
+    }
+
+    function isPerfectMonth() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        if (today.getDate() !== daysInMonth) return false; // Only check on the last day of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateKey = `${year}-${month + 1}-${day}`;
             if (!sessionData[dateKey] || sessionData[dateKey].sessions !== trackerState.dailyGoal) return false;
         }
         return true;
@@ -479,6 +288,7 @@
         if (!currentlyEditingDateKey) return;
         if (!sessionData[currentlyEditingDateKey]) sessionData[currentlyEditingDateKey] = { sessions: 0 };
         sessionData[currentlyEditingDateKey].note = noteTextarea.value.trim();
+        unlockAchievement('FIRST_NOTE');
         saveData('sessionData');
         closeNoteModal();
         updateCalendarDays();
@@ -538,7 +348,13 @@
     }
     
     function setupEventListeners() {
-        habitTitleElement.addEventListener('blur', () => { let cleanText = habitTitleElement.innerText.trim(); if (!cleanText) cleanText = 'Reward Tracker'; habitTitleElement.textContent = cleanText; saveData('habitTitle'); });
+        habitTitleElement.addEventListener('blur', () => {
+            let cleanText = habitTitleElement.innerText.trim();
+            if (!cleanText) { cleanText = 'Reward Tracker'; }
+            else { if (habitTitleElement.textContent !== 'Reward Tracker') unlockAchievement('CUSTOM_TITLE'); }
+            habitTitleElement.textContent = cleanText;
+            saveData('habitTitle');
+        });
         habitTitleElement.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); habitTitleElement.blur(); } });
         saveNoteButton.addEventListener('click', saveNote);
         closeNoteButton.addEventListener('click', closeNoteModal);

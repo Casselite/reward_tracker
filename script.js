@@ -24,14 +24,13 @@
     // --- State & Constants ---
     let totalAmount = 0.00;
     let sessionsFinished = 0;
-    let sessionData = {}; // Data for calendar days (sessions, notes)
-    let trackerState = {}; // Data for streaks and achievements
-    let currentlyEditingDateKey = null; // To track which day's note is being edited
+    let sessionData = {};
+    let trackerState = {};
+    let currentlyEditingDateKey = null;
     const sessionValues = { 1: 0.10, 2: 0.42, 3: 1.12, 4: 1.68 };
     const maxAmountPerDay = 3.32;
     const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     
-    // --- Achievements Definitions ---
     const ACHIEVEMENTS = {
         PERFECT_DAY: { name: "Perfect Day!", description: "Complete all 4 sessions in one day." },
         STREAK_7: { name: "7-Day Streak!", description: "Maintain a streak for 7 days." },
@@ -51,6 +50,9 @@
         updateAllUI();
     }
     
+    /**
+     * CORRECTED: Loads all data and handles year/month changes robustly.
+     */
     function loadData(currentDate) {
         const savedTitle = localStorage.getItem('habitTitle');
         if (savedTitle) habitTitleElement.textContent = savedTitle;
@@ -58,22 +60,30 @@
         try { sessionData = JSON.parse(localStorage.getItem('sessionData')) || {}; } catch (e) { console.error('Failed to parse session data.', e); sessionData = {}; }
         try { trackerState = JSON.parse(localStorage.getItem('trackerState')) || { longestStreak: 0, unlockedAchievements: [] }; } catch (e) { console.error('Failed to parse tracker state.', e); trackerState = { longestStreak: 0, unlockedAchievements: [] }; }
 
-        const currentMonth = currentDate.getMonth() + 1;
-        const storedMonth = sessionData.currentMonth || currentMonth;
-        if (storedMonth !== currentMonth) {
-            sessionData = { currentMonth: currentMonth };
-            saveData('sessionData');
+        const currentYearMonth = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}`;
+        const storedYearMonth = sessionData.currentYearMonth || currentYearMonth;
+
+        if (storedYearMonth !== currentYearMonth) {
+            sessionData = { currentYearMonth: currentYearMonth };
+            // No need to save here, will be saved on first action
         }
+        
+        sessionData.currentYearMonth = currentYearMonth;
 
         const dateKey = getFormattedDate(currentDate);
         sessionsFinished = (sessionData[dateKey] && sessionData[dateKey].sessions) ? sessionData[dateKey].sessions : 0;
     }
 
+    /**
+     * CORRECTED: Saves all data types correctly.
+     */
     function saveData(key) {
         try {
             if (key === 'sessionData') {
                 const dateKey = getFormattedDate(new Date());
-                if (!sessionData[dateKey]) sessionData[dateKey] = {};
+                if (!sessionData[dateKey]) {
+                    sessionData[dateKey] = {};
+                }
                 sessionData[dateKey].sessions = sessionsFinished;
                 localStorage.setItem('sessionData', JSON.stringify(sessionData));
             } else if (key === 'trackerState') {
@@ -138,19 +148,15 @@
 
         let totalSessionsDone = 0;
         for (const key in sessionData) {
-            if (key !== 'currentMonth' && sessionData[key].sessions) {
+            if (key !== 'currentYearMonth' && sessionData[key].sessions) {
                 totalSessionsDone += sessionData[key].sessions;
             }
         }
-
         const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
         const maxPossibleSessions = daysInMonth * 4;
         progressContainer.title = `${totalSessionsDone} of ${maxPossibleSessions} possible sessions done`;
     }
 
-    /**
-     * CORRECTED FUNCTION: Styles calendar days for past, present, and future.
-     */
     function updateCalendarDays() {
         const today = new Date();
         const todayDate = today.getDate();
@@ -164,23 +170,16 @@
             const sessionsForDay = dayData.sessions || 0;
             const noteForDay = dayData.note || '';
             
-            dayEl.className = 'calendar-day'; // Reset classes completely
+            dayEl.className = 'calendar-day';
 
             if (day < todayDate) {
-                // Logic for PAST days
                 dayEl.classList.add(getSessionClass(sessionsForDay));
-                if (sessionsForDay === 0) {
-                    dayEl.classList.add('inactive-day'); // Mark missed past days
-                }
+                if (sessionsForDay === 0) dayEl.classList.add('inactive-day');
             } else if (day === todayDate) {
-                // Logic for CURRENT day
                 dayEl.classList.add('current-day');
                 dayEl.classList.add(getSessionClass(sessionsForDay));
-            } else {
-                // Logic for FUTURE days - no special classes needed, remains neutral
             }
-            
-            // Update Roman numerals for all days
+
             let sessionCountEl = dayEl.querySelector('.session-count');
             if (!sessionCountEl) {
                 sessionCountEl = document.createElement('div');
@@ -190,7 +189,6 @@
             const romanNumerals = ['I', 'II', 'III', 'IV'];
             sessionCountEl.textContent = sessionsForDay > 0 ? romanNumerals[sessionsForDay - 1] : '';
 
-            // Update note indicator for all days
             let noteIndicatorEl = dayEl.querySelector('.note-indicator');
             if (noteForDay && !noteIndicatorEl) {
                 noteIndicatorEl = document.createElement('div');
@@ -220,7 +218,6 @@
         if (currentStreak > trackerState.longestStreak) trackerState.longestStreak = currentStreak;
         trackerState.currentStreak = currentStreak;
         saveData('trackerState');
-        updateStreakDisplay();
     }
 
     function updateStreakDisplay() {
@@ -285,12 +282,12 @@
         updateCalendarDays();
     }
 
-    // --- Helper Functions ---
+    // --- Helper & Setup Functions ---
 
     function calculateTotalAmount() {
         let amount = 0;
         for (const dateKey in sessionData) {
-            if (dateKey !== "currentMonth" && sessionData[dateKey].sessions) {
+            if (dateKey !== "currentYearMonth" && sessionData[dateKey].sessions) {
                 const dailySessions = sessionData[dateKey].sessions;
                 for (let i = 1; i <= dailySessions; i++) {
                     amount += sessionValues[i];
@@ -302,8 +299,15 @@
     
     function setupEventListeners() {
         for (let i = 1; i <= 4; i++) sessionButtons[i].addEventListener('click', () => toggleSession(i));
-        habitTitleElement.addEventListener('blur', () => saveData('habitTitle'));
+        
+        habitTitleElement.addEventListener('blur', () => {
+            let cleanText = habitTitleElement.innerText.trim();
+            if (!cleanText) cleanText = 'Reward Tracker';
+            habitTitleElement.textContent = cleanText;
+            saveData('habitTitle');
+        });
         habitTitleElement.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); habitTitleElement.blur(); } });
+
         saveNoteButton.addEventListener('click', saveNote);
         closeNoteButton.addEventListener('click', closeNoteModal);
         noteModal.addEventListener('click', (e) => { if (e.target === noteModal) closeNoteModal(); });
@@ -322,7 +326,14 @@
             const dayEl = document.createElement('div');
             dayEl.classList.add('calendar-day');
             dayEl.dataset.day = day;
-            dayEl.addEventListener('click', () => { openNoteModal(`${year}-${month + 1}-${day}`); });
+            dayEl.addEventListener('click', () => {
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const dayDate = new Date(year, month, day);
+                if (dayDate <= today) {
+                    openNoteModal(`${year}-${month + 1}-${day}`);
+                }
+            });
             const dayNumberEl = document.createElement('div');
             dayNumberEl.classList.add('day-number');
             dayNumberEl.textContent = day;

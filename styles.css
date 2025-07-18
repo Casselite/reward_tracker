@@ -8,8 +8,6 @@
     --text-color-light: #6c757d;
     --text-color-dark: #333;
     --progress-bar-bg: #ccc;
-
-    /* Calendar Day Background Colors */
     --session-0-bg: #f8d7da;
     --session-1-bg: #fde1af;
     --session-2-bg: #fff7a1;
@@ -35,7 +33,6 @@ body {
     overflow: hidden;
 }
 
-/* Font classes */
 .inconsolata-title { font-family: var(--font-main); font-weight: 700; }
 .inconsolata-button, .inconsolata-total, .inconsolata-month, .inconsolata-changelog { font-family: var(--font-main); }
 
@@ -53,8 +50,34 @@ body {
 }
 
 /* --- Header --- */
-header h1 {
+.title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 5px;
+}
+.header-icons {
+    display: flex;
+    gap: 5px;
+}
+.icon-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    line-height: 1;
+}
+.icon-button:hover {
+    background-color: #f0f0f0;
+}
+header h1 {
+    margin: 0;
+    flex-grow: 1;
+    text-align: center;
     color: transparent;
     -webkit-text-stroke: 0.5px var(--border-color-dark);
     letter-spacing: 5px;
@@ -75,18 +98,9 @@ header h1:focus {
 .streaks-container span { margin: 0 10px; }
 
 /* --- Sessions Section --- */
-.sessions h2, .calendar h2 {
-    margin-bottom: 5px;
-    color: var(--primary-color-hover);
-    letter-spacing: 5px;
-    font-size: 40px;
-}
+.sessions h2, .calendar h2 { margin-bottom: 5px; color: var(--primary-color-hover); letter-spacing: 5px; font-size: 40px; }
 .session-buttons { display: flex; justify-content: space-around; margin-bottom: 20px; }
-.session-button {
-    flex: 1; margin: 0 2px; padding: 10px 0; font-size: 25px;
-    cursor: pointer; border: 1px solid var(--text-color-light); background: transparent;
-    color: var(--text-color-light); border-radius: 5px; transition: background 0.2s ease-in-out, transform 0.2s ease;
-}
+.session-button { flex: 1; margin: 0 2px; padding: 10px 0; font-size: 25px; cursor: pointer; border: 1px solid var(--text-color-light); background: transparent; color: var(--text-color-light); border-radius: 5px; transition: background 0.2s ease-in-out, transform 0.2s ease; }
 .session-button:disabled { background: var(--disabled-bg); color: var(--text-color-light); cursor: not-allowed; }
 .session-button.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
 .session-button:hover:not(:disabled) { background: var(--primary-color-hover); color: white; border-color: var(--primary-color-hover); }
@@ -94,92 +108,65 @@ header h1:focus {
 
 .total { margin-top: 10px; font-size: 18px; color: var(--text-color-dark); }
 .total span { margin: 0 10px; }
-
-.progress-container {
-    width: 100%; background-color: var(--progress-bar-bg); border-radius: 5px;
-    overflow: hidden; margin: 20px 0 10px 0; border: 0.3px solid var(--border-color-dark);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
+.progress-container { width: 100%; background-color: var(--progress-bar-bg); border-radius: 5px; overflow: hidden; margin: 20px 0 10px 0; border: 0.3px solid var(--border-color-dark); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
 .progress-bar { height: 10px; background-color: var(--primary-color); width: 0%; transition: width 0.5s ease; }
 
 /* --- Calendar --- */
 .calendar { margin-top: 20px; }
 #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; width: 100%; }
 .calendar-day-container { display: flex; flex-direction: column; align-items: center; }
-.calendar-day {
-    width: 100%; height: 50px; display: flex; justify-content: center; align-items: center;
-    border: 1px solid var(--border-color); border-radius: 5px; transition: background-color 0.7s ease;
-    font-size: 18px; position: relative; cursor: pointer;
-}
+.calendar-day { width: 100%; height: 50px; display: flex; justify-content: center; align-items: center; border: 1px solid var(--border-color); border-radius: 5px; transition: background-color 0.7s ease; font-size: 18px; position: relative; cursor: pointer; }
 .calendar-day:hover { box-shadow: 0 0 5px var(--primary-color); }
 .calendar-day.current-day { background-color: var(--current-day-bg); border: 1px solid var(--primary-color); }
-
 .calendar-day.no-sessions { background: var(--session-0-bg); }
 .calendar-day.one-session { background: var(--session-1-bg); }
 .calendar-day.two-sessions { background: var(--session-2-bg); }
 .calendar-day.three-sessions { background: var(--session-3-bg); }
 .calendar-day.four-sessions { background: var(--session-4-bg); }
-.note-indicator {
-    position: absolute; top: 3px; right: 3px; width: 8px; height: 8px;
-    background-color: #000; border-radius: 50%; border: 1px solid white;
-}
-.session-count {
-    --shadow-color: var(--session-0-bg);
-    font-size: 35px; color: transparent; pointer-events: none; font-weight: bold;
-    -webkit-text-stroke: 1px var(--border-color-dark);
-    text-shadow: 2px 2px 0 var(--shadow-color), -1px -1px 0 var(--shadow-color), 1px -1px 0 var(--shadow-color), -1px 1px 0 var(--shadow-color), 1px 1px 0 var(--shadow-color);
-}
+.note-indicator { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; background-color: #000; border-radius: 50%; border: 1px solid white; }
+.session-count { --shadow-color: var(--session-0-bg); font-size: 35px; color: transparent; pointer-events: none; font-weight: bold; -webkit-text-stroke: 1px var(--border-color-dark); text-shadow: 2px 2px 0 var(--shadow-color), -1px -1px 0 var(--shadow-color), 1px -1px 0 var(--shadow-color), -1px 1px 0 var(--shadow-color), 1px 1px 0 var(--shadow-color); }
 .calendar-day.one-session .session-count   { --shadow-color: var(--session-1-bg); }
 .calendar-day.two-sessions .session-count  { --shadow-color: var(--session-2-bg); }
 .calendar-day.three-sessions .session-count{ --shadow-color: var(--session-3-bg); }
 .calendar-day.four-sessions .session-count { --shadow-color: var(--session-4-bg); }
-
 .day-number { width: 100%; text-align: center; font-size: 14px; color: var(--text-color-dark); background: #f2f2f2; padding: 2px 0; border: 1px solid var(--border-color); border-radius: 5px; border-top: none; }
 .calendar-day.inactive-day { position: relative; background-color: white; border: 1px solid var(--inactive-day-border); }
-.calendar-day.inactive-day::before {
-    content: "X"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    font-size: 35px; pointer-events: none; -webkit-text-stroke: 1px var(--inactive-day-border); color: transparent;
-}
+.calendar-day.inactive-day::before { content: "X"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 35px; pointer-events: none; -webkit-text-stroke: 1px var(--inactive-day-border); color: transparent; }
 .changelog { position: absolute; bottom: 5px; right: 15px; font-size: 14px; color: var(--border-color-dark); font-family: var(--font-main); font-weight: 300; }
 
+/* --- Modals --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 998; display: none; justify-content: center; align-items: center; }
+.modal-overlay.show { display: flex; }
+.modal-content { background: white; padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; text-align: left; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+.modal-content h3 { font-family: var(--font-main); margin-bottom: 15px; text-align: center; }
+.modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.modal-buttons button { padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; font-size: 16px; font-family: var(--font-main); }
+.modal-buttons button[id*="save"] { background-color: var(--primary-color); color: white; }
+.modal-buttons button[id*="close"] { background-color: var(--text-color-light); color: white; }
+
+/* Note Modal Specifics */
+.modal-content textarea { width: 100%; height: 120px; border: 1px solid var(--border-color); border-radius: 5px; padding: 10px; font-family: 'Arial', sans-serif; font-size: 16px; margin-bottom: 15px; resize: vertical; }
+
+/* Settings Modal Specifics */
+.setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.setting-item label { font-size: 16px; }
+.setting-item input { font-size: 18px; width: 60px; padding: 5px; text-align: center; border: 1px solid var(--border-color); border-radius: 5px; }
+
+/* Achievements Modal Specifics */
+.achievements-list { display: flex; flex-direction: column; gap: 15px; max-height: 40vh; overflow-y: auto; padding-right: 10px; }
+.achievement-item { display: flex; align-items: center; gap: 15px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; transition: all 0.3s; }
+.achievement-item.unlocked { background-color: #e8f5e9; border-left: 5px solid var(--primary-color); }
+.achievement-item.locked { filter: grayscale(1); opacity: 0.6; }
+.achievement-icon { font-size: 32px; }
+.achievement-details h4 { margin: 0; font-size: 16px; color: var(--text-color-dark); }
+.achievement-details p { margin: 0; font-size: 14px; color: var(--text-color-light); }
+
 /* --- Achievement Notification --- */
-.notification {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background-color: #2c3e50; color: white; border-radius: 10px;
-    display: flex; align-items: center; padding: 15px 20px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000;
-    opacity: 0; visibility: hidden; transition: opacity 0.5s, visibility 0.5s, transform 0.5s;
-}
+.notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: #2c3e50; color: white; border-radius: 10px; display: flex; align-items: center; padding: 15px 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.5s, visibility 0.5s, transform 0.5s; }
 .notification.show { opacity: 1; visibility: visible; transform: translate(-50%, -10px); }
 .notification-icon { font-size: 24px; margin-right: 15px; }
 .notification-title { font-weight: bold; font-size: 16px; }
 .notification-text { font-size: 14px; }
-
-/* --- Daily Note Modal --- */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.6); z-index: 998;
-    display: none; justify-content: center; align-items: center;
-}
-.modal-overlay.show { display: flex; }
-.modal-content {
-    background: white; padding: 25px; border-radius: 15px;
-    width: 90%; max-width: 500px; text-align: left;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-}
-.modal-content h3 { font-family: var(--font-main); margin-bottom: 15px; text-align: center; }
-.modal-content textarea {
-    width: 100%; height: 120px; border: 1px solid var(--border-color);
-    border-radius: 5px; padding: 10px; font-family: 'Arial', sans-serif;
-    font-size: 16px; margin-bottom: 15px; resize: vertical;
-}
-.modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
-.modal-buttons button {
-    padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer;
-    font-size: 16px; font-family: var(--font-main);
-}
-.modal-buttons button#saveNoteButton { background-color: var(--primary-color); color: white; }
-.modal-buttons button#closeNoteButton { background-color: var(--text-color-light); color: white; }
 
 /* --- Responsive Design --- */
 @media (max-width: 768px) {
@@ -190,4 +177,5 @@ header h1:focus {
     .calendar-day { font-size: 14px; height: 40px; }
     .session-count { font-size: 25px; }
     .streaks-container { font-size: 14px; }
+    .icon-button { font-size: 20px; }
 }

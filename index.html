@@ -22,7 +22,13 @@
                 <button id="session4" class="session-button inconsolata-button" disabled>4</button>
             </div>
             <div class="progress-container" title="">
-                <div id="progressBar" class="progress-bar"></div>
+                <div id="progressBar" 
+                     class="progress-bar"
+                     role="progressbar"
+                     aria-valuenow="0"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                </div>
             </div>
             <div class="total inconsolata-total" id="totalContainer">
                 <span id="totalAmount">€0,00</span> of <span id="maxAmount">€0,00</span>
@@ -32,12 +38,12 @@
             <h2 id="currentMonth" class="inconsolata-month">MAY</h2>
             <div id="calendar"></div>
         </section>
-        <footer class="changelog inconsolata-changelog">Version 1b</footer>
+        <footer class="changelog inconsolata-changelog">Version 2</footer>
     </main>
 
     <!-- Audio elements for sounds -->
-    <audio id="clickSound" src="coindrop.mp3" preload="auto" volume="0.4"></audio>
-    <audio id="specialClickSound" src="success.mp3" preload="auto" volume="0.4"></audio>
+    <audio id="clickSound" src="coindrop.mp3" preload="auto"></audio>
+    <audio id="specialClickSound" src="success.mp3" preload="auto"></audio>
 
     <script src="script.js"></script>
 </body>

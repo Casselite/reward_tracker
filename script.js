@@ -1,306 +1,220 @@
-document.addEventListener('DOMContentLoaded', () => {
-    initializeCalendar();
-    setupSessionButtons();
-    loadSessionData();
-    updateCurrentMonthDisplay();
-});
+// Wrap script in an IIFE to create a private scope and avoid global variables.
+(function() {
+    'use strict'; // Enforce stricter parsing and error handling.
 
-const totalAmountElement = document.getElementById('totalAmount');
-const maxAmountElement = document.getElementById('maxAmount');
-const progressBar = document.getElementById('progressBar');
-const progressContainer = document.querySelector('.progress-container');
-const sessionButtons = {
-    1: document.getElementById('session1'),
-    2: document.getElementById('session2'),
-    3: document.getElementById('session3'),
-    4: document.getElementById('session4')
-};
-let totalAmount = 0.00;
-let sessionsFinished = 0;
-let sessionData = JSON.parse(localStorage.getItem('sessionData')) || {};
-let sessionState = {
-    1: false,
-    2: false,
-    3: false,
-    4: false
-};
-const sessionValues = {
-    1: 0.10,
-    2: 0.42,
-    3: 1.12,
-    4: 1.68
-};
+    // --- DOM Elements ---
+    const totalAmountElement = document.getElementById('totalAmount');
+    const maxAmountElement = document.getElementById('maxAmount');
+    const progressBar = document.getElementById('progressBar');
+    const progressContainer = document.querySelector('.progress-container');
+    const sessionButtons = {
+        1: document.getElementById('session1'),
+        2: document.getElementById('session2'),
+        3: document.getElementById('session3'),
+        4: document.getElementById('session4')
+    };
+    const clickSound = document.getElementById('clickSound');
+    const specialClickSound = document.getElementById('specialClickSound');
 
-const maxAmountPerDay = 3.32;
+    // --- State & Constants ---
+    let totalAmount = 0.00;
+    let sessionsFinished = 0;
+    let sessionData = {}; // Initialized in loadSessionData
+    const sessionState = { 1: false, 2: false, 3: false, 4: false };
+    const sessionValues = { 1: 0.10, 2: 0.42, 3: 1.12, 4: 1.68 };
+    const maxAmountPerDay = 3.32;
 
-function getFormattedDate() {
-    const now = new Date();
-    return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-}
+    // --- Core Functions ---
 
-function updateCurrentMonthDisplay() {
-    const currentDate = new Date();
-    const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June', 'July',
-        'August', 'September', 'October', 'November', 'December'
-    ];
-    document.getElementById('currentMonth').textContent = monthNames[currentDate.getMonth()];
-}
-
-function saveSessionData() {
-    const dateKey = getFormattedDate();
-    sessionData[dateKey] = sessionsFinished;
-    localStorage.setItem('sessionData', JSON.stringify(sessionData));
-    localStorage.setItem('totalAmount', totalAmount.toFixed(2));
-    console.log('Saving Data:', { totalAmount });
-}
-
-function loadSessionData() {
-    const dateKey = getFormattedDate();
-    const currentMonth = new Date().getMonth() + 1;
-    const storedMonth = sessionData.currentMonth || currentMonth;
-
-    if (storedMonth !== currentMonth) {
-        sessionData = { currentMonth: currentMonth };
-        totalAmount = 0.00;
-        sessionsFinished = 0;
-        resetSessionStates();
-        localStorage.setItem('sessionData', JSON.stringify(sessionData));
-    } else {
-        sessionData.currentMonth = currentMonth;
-        localStorage.setItem('sessionData', JSON.stringify(sessionData));
+    /**
+     * Initializes the application when the DOM is fully loaded.
+     */
+    function initialize() {
+        const now = new Date();
+        loadSessionData(now);
+        initializeCalendar(now);
+        setupSessionButtons();
+        updateCurrentMonthDisplay(now);
     }
 
-    totalAmount = calculateTotalAmount();
-
-    if (sessionData[dateKey]) {
-        sessionsFinished = sessionData[dateKey];
-        updateSessionStates();
-    }
-
-    updateTotalAmountDisplay();
-    updateProgressBar();
-    updateCalendarDays();
-}
-
-function updateSessionStates() {
-    for (let i = 1; i <= 4; i++) {
-        if (i <= sessionsFinished) {
-            sessionState[i] = true;
-            sessionButtons[i].classList.add('active');
-        } else {
-            sessionState[i] = false;
-            sessionButtons[i].classList.remove('active');
-        }
-        sessionButtons[i].disabled = i > (sessionsFinished + 1);
-    }
-    sessionButtons[1].disabled = false;
-    updateCurrentDay();
-}
-
-function resetSessionStates() {
-    for (let i = 1; i <= 4; i++) {
-        sessionState[i] = false;
-        sessionButtons[i].classList.remove('active');
-        sessionButtons[i].disabled = i !== 1;
-    }
-    sessionButtons[1].disabled = false;
-}
-
-function toggleSession(sessionNumber) {
-    const sessionButton = sessionButtons[sessionNumber];
-    const wasActive = sessionState[sessionNumber];
-    let shouldPlayClickSound = !wasActive;
-
-    if (sessionState[sessionNumber]) {
-        for (let i = sessionNumber; i <= 4; i++) {
-            if (sessionState[i]) {
-                totalAmount -= sessionValues[i];
-                sessionState[i] = false;
-                sessionButtons[i].classList.remove('active');
-            }
-            sessionButtons[i].disabled = true;
-        }
-        sessionsFinished = sessionNumber - 1;
-    } else {
-        for (let i = 1; i <= sessionNumber; i++) {
-            if (!sessionState[i]) {
-                totalAmount += sessionValues[i];
-                sessionState[i] = true;
-                sessionButtons[i].classList.add('active');
-            }
-        }
-        sessionsFinished = sessionNumber;
-    }
-
-    sessionButtons[1].disabled = false;
-    for (let i = 2; i <= 4; i++) {
-        sessionButtons[i].disabled = !(sessionState[i - 1]);
-    }
-
-    updateTotalAmountDisplay();
-    saveSessionData();
-    updateProgressBar();
-    updateCurrentDay();
-
-    if (shouldPlayClickSound) {
-        const soundToPlay = sessionNumber === 4 ? document.getElementById('specialClickSound') : document.getElementById('clickSound');
-        soundToPlay.currentTime = 0;
-        soundToPlay.play();
-    }
-}
-
-function calculateTotalAmount() {
-    let amount = 0;
-    for (const dateKey in sessionData) {
-        if (dateKey !== "currentMonth") {
-            for (let i = 1; i <= sessionData[dateKey]; i++) {
-                amount += sessionValues[i];
-            }
-        }
-    }
-    return parseFloat(amount.toFixed(2));
-}
-
-function resetSessions() {
-    totalAmount = 0.00;
-    sessionsFinished = 0;
-    resetSessionStates();
-    updateTotalAmountDisplay();
-    saveSessionData();
-    updateProgressBar();
-}
-
-function calculateMaxAmount() {
-    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-    return daysInMonth * maxAmountPerDay;
-}
-
-function updateTotalAmountDisplay() {
-    const maxAmount = calculateMaxAmount();
-    totalAmountElement.textContent = formatCurrency(totalAmount);
-    maxAmountElement.textContent = formatCurrency(maxAmount);
-    console.log('Updated Display. totalAmount:', totalAmountElement.textContent); // Debugging log
-}
-
-function updateProgressBar() {
-    const maxAmount = calculateMaxAmount();
-    const progressPercentage = (totalAmount / maxAmount) * 100;
-    progressBar.style.width = `${progressPercentage}%`;
-
-    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-    const maxPossibleSessions = daysInMonth * 4;
-    const totalSessionsDone = Object.values(sessionData).reduce((sum, val) => typeof val === 'number' ? sum + val : sum, 0);
-    progressContainer.title = `${totalSessionsDone} of ${maxPossibleSessions} possible sessions done`;
-}
-
-function formatCurrency(value) {
-    const formattedValue = value.toFixed(2).replace('.', ',');
-    return formattedValue === '-0,00' || formattedValue === '0,00' ? '€0,00' : `€${formattedValue}`;
-}
-
-function initializeCalendar() {
-    const calendarEl = document.getElementById('calendar');
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-    calendarEl.innerHTML = '';
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dayContainerEl = document.createElement('div');
-        dayContainerEl.classList.add('calendar-day-container');
-
-        const dayEl = document.createElement('div');
-        dayEl.classList.add('calendar-day');
-        dayEl.dataset.day = day;
-
-        const dayNumberEl = document.createElement('div');
-        dayNumberEl.classList.add('day-number');
-        dayNumberEl.textContent = day;
-
-        dayContainerEl.appendChild(dayEl);
-        dayContainerEl.appendChild(dayNumberEl);
-        calendarEl.appendChild(dayContainerEl);
-    }
-
-    updateCalendarDays();
-}
-
-function updateCurrentDay() {
-    const currentDayEl = document.querySelector(`.calendar-day[data-day="${new Date().getDate()}"]`);
-
-    if (!currentDayEl) return;
-
-    currentDayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions');
-    currentDayEl.classList.add('current-day');
-
-    let sessionClass = '';
-    switch (sessionsFinished) {
-        case 1:
-            sessionClass = 'one-session';
-            break;
-        case 2:
-            sessionClass = 'two-sessions';
-            break;
-        case 3:
-            sessionClass = 'three-sessions';
-            break;
-        case 4:
-            sessionClass = 'four-sessions';
-            break;
-        default:
-            sessionClass = 'no-sessions';
-            break;
-    }
-    currentDayEl.classList.add(sessionClass);
-
-    let sessionCountEl = currentDayEl.querySelector('.session-count');
-    if (!sessionCountEl) {
-        sessionCountEl = document.createElement('div');
-        sessionCountEl.classList.add('session-count');
-        currentDayEl.appendChild(sessionCountEl);
-    }
-
-    const romanNumerals = ['I', 'II', 'III', 'IV'];
-    sessionCountEl.textContent = sessionsFinished > 0 ? romanNumerals[sessionsFinished - 1] : '';
-}
-
-function updateCalendarDays() {
-    const today = new Date().getDate();
-    const currentMonth = new Date().getMonth() + 1;
-    const currentYear = new Date().getFullYear();
-
-    document.querySelectorAll('.calendar-day').forEach(dayEl => {
-        const day = parseInt(dayEl.dataset.day, 10);
-        const dateKey = `${currentYear}-${currentMonth}-${day}`;
-
-        dayEl.classList.remove('no-sessions', 'one-session', 'two-sessions', 'three-sessions', 'four-sessions', 'inactive-day', 'current-day');
-
-        if (dayEl.querySelector('.inactive-mark')) {
-            dayEl.querySelector('.inactive-mark').remove();
+    /**
+     * Loads session data from localStorage, handling month changes.
+     */
+    function loadSessionData(currentDate) {
+        try {
+            sessionData = JSON.parse(localStorage.getItem('sessionData')) || {};
+        } catch (e) {
+            console.error('Failed to parse session data from localStorage.', e);
+            sessionData = {};
         }
 
+        const currentMonth = currentDate.getMonth() + 1;
+        const storedMonth = sessionData.currentMonth || currentMonth;
+
+        // If the month has changed, reset all data.
+        if (storedMonth !== currentMonth) {
+            sessionData = { currentMonth: currentMonth };
+            totalAmount = 0.00;
+            sessionsFinished = 0;
+            saveSessionData(); // Save the cleared state
+        }
+        
+        // Recalculate total amount from stored data
+        totalAmount = calculateTotalAmount();
+
+        const dateKey = getFormattedDate(currentDate);
         if (sessionData[dateKey]) {
-            let sessionClass = '';
-            switch (sessionData[dateKey]) {
-                case 1:
-                    sessionClass = 'one-session';
-                    break;
-                case 2:
-                    sessionClass = 'two-sessions';
-                    break;
-                case 3:
-                    sessionClass = 'three-sessions';
-                    break;
-                case 4:
-                    sessionClass = 'four-sessions';
-                    break;
-                default:
-                    sessionClass = 'no-sessions';
-                    break;
+            sessionsFinished = sessionData[dateKey];
+        }
+
+        updateAllUI();
+    }
+
+    /**
+     * Saves the current session data and total amount to localStorage.
+     */
+    function saveSessionData() {
+        try {
+            const dateKey = getFormattedDate(new Date());
+            sessionData[dateKey] = sessionsFinished;
+            localStorage.setItem('sessionData', JSON.stringify(sessionData));
+        } catch (e) {
+            console.error('Failed to save session data to localStorage.', e);
+            // Optionally, inform the user that progress cannot be saved.
+        }
+    }
+
+    /**
+     * Toggles the state of a session button (on/off).
+     * This function is complex because toggling a session off also
+     * toggles off all subsequent sessions for that day.
+     */
+    function toggleSession(sessionNumber) {
+        const wasActive = sessionState[sessionNumber];
+
+        // --- Logic for Turning Sessions OFF ---
+        // If the clicked session was already active, turn it and all subsequent sessions off.
+        if (wasActive) {
+            for (let i = sessionNumber; i <= 4; i++) {
+                if (sessionState[i]) {
+                    sessionState[i] = false;
+                }
             }
-            dayEl.classList.add(sessionClass);
+            sessionsFinished = sessionNumber - 1;
+        }
+        // --- Logic for Turning Sessions ON ---
+        // If the clicked session was not active, turn it and all preceding sessions on.
+        else {
+            for (let i = 1; i <= sessionNumber; i++) {
+                if (!sessionState[i]) {
+                    sessionState[i] = true;
+                }
+            }
+            sessionsFinished = sessionNumber;
+        }
+
+        // Recalculate total amount and update everything
+        totalAmount = calculateTotalAmount();
+        saveSessionData();
+        updateAllUI();
+        
+        // Play sound effect only when activating a session.
+        if (!wasActive) {
+            const soundToPlay = sessionNumber === 4 ? specialClickSound : clickSound;
+            soundToPlay.currentTime = 0;
+            soundToPlay.play().catch(e => console.error("Error playing sound:", e));
+        }
+    }
+
+    // --- UI Update Functions ---
+
+    /**
+     * A single function to refresh all parts of the UI.
+     */
+    function updateAllUI() {
+        updateSessionButtonsAndState();
+        updateTotalAmountDisplay();
+        updateProgressBar();
+        updateCalendarDays();
+    }
+
+    /**
+     * Updates the active/disabled state of the four session buttons.
+     */
+    function updateSessionButtonsAndState() {
+        for (let i = 1; i <= 4; i++) {
+            sessionState[i] = (i <= sessionsFinished);
+            sessionButtons[i].classList.toggle('active', sessionState[i]);
+            sessionButtons[i].disabled = i > (sessionsFinished + 1);
+        }
+        sessionButtons[1].disabled = false; // Session 1 is always clickable.
+    }
+    
+    /**
+     * Updates the total amount and max amount display.
+     */
+    function updateTotalAmountDisplay() {
+        const maxAmount = calculateMaxAmount(new Date());
+        totalAmountElement.textContent = formatCurrency(totalAmount);
+        maxAmountElement.textContent = formatCurrency(maxAmount);
+    }
+    
+    /**
+     * Updates the progress bar width and tooltip.
+     * BUG FIX: This function now correctly calculates total sessions.
+     */
+    function updateProgressBar() {
+        const currentDate = new Date();
+        const maxAmount = calculateMaxAmount(currentDate);
+        const progressPercentage = maxAmount > 0 ? (totalAmount / maxAmount) * 100 : 0;
+        
+        progressBar.style.width = `${progressPercentage}%`;
+        progressBar.setAttribute('aria-valuenow', progressPercentage.toFixed(0));
+
+        // Correctly calculate total sessions done this month for the tooltip.
+        let totalSessionsDone = 0;
+        for (const key in sessionData) {
+            if (key !== 'currentMonth') { // Exclude the month tracker from the sum
+                totalSessionsDone += sessionData[key];
+            }
+        }
+
+        const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+        const maxPossibleSessions = daysInMonth * 4;
+        progressContainer.title = `${totalSessionsDone} of ${maxPossibleSessions} possible sessions done`;
+    }
+
+    /**
+     * Updates the visual state of all days in the calendar.
+     */
+    function updateCalendarDays() {
+        const today = new Date();
+        const todayDate = today.getDate();
+        const currentMonth = today.getMonth() + 1;
+        const currentYear = today.getFullYear();
+
+        document.querySelectorAll('.calendar-day').forEach(dayEl => {
+            const day = parseInt(dayEl.dataset.day, 10);
+            const dateKey = `${currentYear}-${currentMonth}-${day}`;
+            const sessionsForDay = sessionData[dateKey] || 0;
+
+            // Reset classes
+            dayEl.className = 'calendar-day';
+            
+            // Add session class
+            dayEl.classList.add(getSessionClass(sessionsForDay));
+
+            // Mark past, uncompleted days
+            if (sessionsForDay === 0 && day < todayDate) {
+                dayEl.classList.add('inactive-day');
+            }
+
+            // Highlight the current day
+            if (day === todayDate) {
+                dayEl.classList.add('current-day');
+            }
+            
+            // Update the Roman numeral display
             let sessionCountEl = dayEl.querySelector('.session-count');
             if (!sessionCountEl) {
                 sessionCountEl = document.createElement('div');
@@ -308,34 +222,91 @@ function updateCalendarDays() {
                 dayEl.appendChild(sessionCountEl);
             }
             const romanNumerals = ['I', 'II', 'III', 'IV'];
-            sessionCountEl.textContent = sessionData[dateKey] > 0 ? romanNumerals[sessionData[dateKey] - 1] : '';
-        } else {
-            if (day < today) {
-                dayEl.classList.add('inactive-day');
-            }
-        }
-
-        if (day === today) {
-            dayEl.classList.add('current-day');
-        }
-    });
-}
-
-function setupSessionButtons() {
-    const clickSound = document.getElementById('clickSound');
-    const specialClickSound = document.getElementById('specialClickSound');
-    clickSound.volume = 0.2;
-    specialClickSound.volume = 0.2;
-
-    for (let i = 1; i <= 4; i++) {
-        sessionButtons[i].addEventListener('click', () => {
-            toggleSession(i);
+            sessionCountEl.textContent = sessionsForDay > 0 ? romanNumerals[sessionsForDay - 1] : '';
         });
     }
-}
 
-function clearLocalStorage() {
-    localStorage.clear();
-    console.log('LocalStorage Cleared');
-    loadSessionData();
-}
+    // --- Helper & Setup Functions ---
+
+    /**
+     * Recalculates the total amount based on the entire sessionData object.
+     */
+    function calculateTotalAmount() {
+        let amount = 0;
+        for (const dateKey in sessionData) {
+            if (dateKey !== "currentMonth") {
+                const dailySessions = sessionData[dateKey];
+                for (let i = 1; i <= dailySessions; i++) {
+                    amount += sessionValues[i];
+                }
+            }
+        }
+        return parseFloat(amount.toFixed(2));
+    }
+
+    function initializeCalendar(currentDate) {
+        const calendarEl = document.getElementById('calendar');
+        const month = currentDate.getMonth();
+        const year = currentDate.getFullYear();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        calendarEl.innerHTML = ''; // Clear previous calendar
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayContainerEl = document.createElement('div');
+            dayContainerEl.classList.add('calendar-day-container');
+
+            const dayEl = document.createElement('div');
+            dayEl.classList.add('calendar-day');
+            dayEl.dataset.day = day;
+
+            const dayNumberEl = document.createElement('div');
+            dayNumberEl.classList.add('day-number');
+            dayNumberEl.textContent = day;
+
+            dayContainerEl.appendChild(dayEl);
+            dayContainerEl.appendChild(dayNumberEl);
+            calendarEl.appendChild(dayContainerEl);
+        }
+    }
+
+    function setupSessionButtons() {
+        clickSound.volume = 0.2;
+        specialClickSound.volume = 0.2;
+
+        for (let i = 1; i <= 4; i++) {
+            sessionButtons[i].addEventListener('click', () => toggleSession(i));
+        }
+    }
+
+    function updateCurrentMonthDisplay(currentDate) {
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        document.getElementById('currentMonth').textContent = monthNames[currentDate.getMonth()];
+    }
+
+    function calculateMaxAmount(currentDate) {
+        const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+        return daysInMonth * maxAmountPerDay;
+    }
+
+    function getFormattedDate(date) {
+        return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    }
+
+    function formatCurrency(value) {
+        return `€${value.toFixed(2).replace('.', ',')}`;
+    }
+
+    function getSessionClass(sessionCount) {
+        const classMap = {
+            1: 'one-session',
+            2: 'two-sessions',
+            3: 'three-sessions',
+            4: 'four-sessions'
+        };
+        return classMap[sessionCount] || 'no-sessions';
+    }
+
+    // --- Event Listener ---
+    document.addEventListener('DOMContentLoaded', initialize);
+
+})();

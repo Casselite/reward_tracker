@@ -1,3 +1,25 @@
+/* CSS Variables for easy theme management */
+:root {
+    --font-main: "Inconsolata", monospace;
+    --primary-color: #28a745;
+    --primary-color-hover: #218838;
+    --disabled-bg: #e0e0e0;
+    --border-color: #ccc;
+    --border-color-dark: #000;
+    --text-color-light: #6c757d;
+    --text-color-dark: #333;
+    --progress-bar-bg: #ccc;
+
+    /* Calendar Day Background Colors */
+    --session-0-bg: #f8d7da;
+    --session-1-bg: #fde1af;
+    --session-2-bg: #fff7a1;
+    --session-3-bg: #d8eec9;
+    --session-4-bg: #a8db8f;
+    --current-day-bg: #ffcccc;
+    --inactive-day-border: red;
+}
+
 /* CSS Reset */
 *,
 *::before,
@@ -7,7 +29,6 @@
     box-sizing: inherit;
 }
 
-/* Set default box-sizing to border-box */
 html {
     box-sizing: border-box;
 }
@@ -21,28 +42,21 @@ body {
     background-color: #f2f2f2;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* Prevent scrolling */
+    overflow: hidden;
 }
 
-/* Using the Inconsolata font with unique classes */
-.inconsolata-title {
-    font-family: "Inconsolata", monospace;
-    font-weight: 700;
-}
-
-.inconsolata-button, .inconsolata-total, .inconsolata-month, .inconsolata-changelog {
-    font-family: "Inconsolata", monospace;
-}
+/* Font classes */
+.inconsolata-title { font-family: var(--font-main); font-weight: 700; }
+.inconsolata-button, .inconsolata-total, .inconsolata-month, .inconsolata-changelog { font-family: var(--font-main); }
 
 .tracker {
     position: relative;
     background: white;
     padding: 20px;
     border-radius: 25px;
-    border: 0.5px solid #000;
+    border: 0.5px solid var(--border-color-dark);
     box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
     text-align: center;
-    max-width: 100%;
     width: 800px;
     height: auto;
     overflow: hidden;
@@ -51,14 +65,14 @@ body {
 header h1 {
     margin-bottom: 5px;
     color: transparent;
-    -webkit-text-stroke: 0.5px black;
+    -webkit-text-stroke: 0.5px var(--border-color-dark);
     letter-spacing: 5px;
     font-size: 55px;
 }
 
 .sessions h2, .calendar h2 {
     margin-bottom: 5px;
-    color: #218838;
+    color: var(--primary-color-hover);
     letter-spacing: 5px;
     font-size: 40px;
 }
@@ -75,74 +89,64 @@ header h1 {
     padding: 10px 0;
     font-size: 25px;
     cursor: pointer;
-    border: 1px solid #6c757d;
+    border: 1px solid var(--text-color-light);
     background: transparent;
-    color: #6c757d;
+    color: var(--text-color-light);
     border-radius: 5px;
     transition: background 0.2s ease-in-out, transform 0.2s ease;
-    box-sizing: border-box;
 }
 
 .session-button:disabled {
-    background: #e0e0e0;
-    color: #6c757d;
+    background: var(--disabled-bg);
+    color: var(--text-color-light);
     cursor: not-allowed;
 }
 
 .session-button.active {
-    background: #28a745;
+    background: var(--primary-color);
     color: white;
-    border-color: #28a745;
+    border-color: var(--primary-color);
 }
 
-/* Default hover styles */
 .session-button:hover:not(:disabled) {
-    background: #218838;
+    background: var(--primary-color-hover);
     color: white;
-    border-color: #218838;
+    border-color: var(--primary-color-hover);
 }
 
 /* Disable hover styles on mobile devices */
 @media (hover: none) and (pointer: coarse) {
     .session-button:hover {
-        background: transparent; /* Same as default background */
+        background: transparent;
     }
 }
 
 .total {
     margin-top: 10px;
     font-size: 18px;
-    color: #333;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    color: var(--text-color-dark);
 }
 
-.total span {
-    margin: 0 10px;
-}
+.total span { margin: 0 10px; }
 
 .progress-container {
     width: 100%;
-    background-color: #ccc;
+    background-color: var(--progress-bar-bg);
     border-radius: 5px;
     overflow: hidden;
     margin: 20px 0 10px 0;
-    position: relative;
-    border: 0.3px solid #000;
+    border: 0.3px solid var(--border-color-dark);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar {
     height: 10px;
-    background-color: #28a745;
+    background-color: var(--primary-color);
     width: 0%;
     transition: width 0.5s ease;
 }
 
-.calendar {
-    margin-top: 20px;
-}
+.calendar { margin-top: 20px; }
 
 #calendar {
     display: grid;
@@ -155,9 +159,6 @@ header h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    border: none;
-    padding: 0;
-    margin: 0;
 }
 
 .calendar-day {
@@ -166,80 +167,55 @@ header h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     transition: background-color 0.7s ease;
-    box-sizing: border-box;
     font-size: 18px;
 }
 
 .calendar-day.current-day {
-    background-color: #ffcccc; /* Light red */
-    border: 1px solid green;
+    background-color: var(--current-day-bg);
+    border: 1px solid var(--primary-color);
 }
 
-.calendar-day.no-sessions {
-    background: #f8d7da;
-}
-
-.calendar-day.one-session {
-    background: #fde1af;
-}
-
-.calendar-day.two-sessions {
-    background: #fff7a1;
-}
-
-.calendar-day.three-sessions {
-    background: #d8eec9;
-}
-
-.calendar-day.four-sessions {
-    background: #a8db8f;
-}
+.calendar-day.no-sessions { background: var(--session-0-bg); }
+.calendar-day.one-session { background: var(--session-1-bg); }
+.calendar-day.two-sessions { background: var(--session-2-bg); }
+.calendar-day.three-sessions { background: var(--session-3-bg); }
+.calendar-day.four-sessions { background: var(--session-4-bg); }
 
 .session-count {
+    --shadow-color: var(--session-0-bg); /* Default shadow color */
     font-size: 35px;
     color: transparent;
     pointer-events: none;
     font-weight: bold;
-    -webkit-text-stroke: 1px black;
-    text-shadow: 2px 2px 0 #f8d7da, -1px -1px 0 #f8d7da, 1px -1px 0 #f8d7da, -1px 1px 0 #f8d7da, 1px 1px 0 #f8d7da;
+    -webkit-text-stroke: 1px var(--border-color-dark);
+    text-shadow: 2px 2px 0 var(--shadow-color), -1px -1px 0 var(--shadow-color), 1px -1px 0 var(--shadow-color), -1px 1px 0 var(--shadow-color), 1px 1px 0 var(--shadow-color);
 }
 
-.calendar-day.one-session .session-count {
-    text-shadow: 2px 2px 0 #fde1af, -1px -1px 0 #fde1af, 1px -1px 0 #fde1af, -1px 1px 0 #fde1af, 1px 1px 0 #fde1af;
-}
-
-.calendar-day.two-sessions .session-count {
-    text-shadow: 2px 2px 0 #fff7a1, -1px -1px 0 #fff7a1, 1px -1px 0 #fff7a1, -1px 1px 0 #fff7a1, 1px 1px 0 #fff7a1;
-}
-
-.calendar-day.three-sessions .session-count {
-    text-shadow: 2px 2px 0 #d8eec9, -1px -1px 0 #d8eec9, 1px -1px 0 #d8eec9, -1px 1px 0 #d8eec9, 1px 1px 0 #d8eec9;
-}
-
-.calendar-day.four-sessions .session-count {
-    text-shadow: 2px 2px 0 #a8db8f, -1px -1px 0 #a8db8f, 1px -1px 0 #a8db8f, -1px 1px 0 #a8db8f, 1px 1px 0 #a8db8f;
-}
+/* Update the shadow color variable for each session state */
+.calendar-day.one-session .session-count   { --shadow-color: var(--session-1-bg); }
+.calendar-day.two-sessions .session-count  { --shadow-color: var(--session-2-bg); }
+.calendar-day.three-sessions .session-count{ --shadow-color: var(--session-3-bg); }
+.calendar-day.four-sessions .session-count { --shadow-color: var(--session-4-bg); }
 
 .day-number {
     width: 100%;
     text-align: center;
     font-size: 14px;
-    color: #333;
+    color: var(--text-color-dark);
     background: #f2f2f2;
     padding: 2px 0;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     border-top: none;
-    box-sizing: border-box;
 }
 
 .calendar-day.inactive-day {
     position: relative;
     background-color: white;
-    border: 1px solid red;
+    border: 1px solid var(--inactive-day-border);
 }
 
 .calendar-day.inactive-day::before {
@@ -250,7 +226,7 @@ header h1 {
     transform: translate(-50%, -50%);
     font-size: 35px;
     pointer-events: none;
-    -webkit-text-stroke: 1px red;
+    -webkit-text-stroke: 1px var(--inactive-day-border);
     color: transparent;
 }
 
@@ -259,38 +235,17 @@ header h1 {
     bottom: 5px;
     right: 15px;
     font-size: 14px;
-    color: #000;
-    font-family: "Inconsolata", monospace;
+    color: var(--border-color-dark);
+    font-family: var(--font-main);
     font-weight: 300;
 }
 
-/* Responsive Design for Smaller Screens */
+/* Responsive Design */
 @media (max-width: 768px) {
-    .tracker {
-        width: 100%;
-        padding: 10px;
-        border-radius: 10px;
-    }
-
-    header h1 {
-        font-size: 35px;
-    }
-
-    .sessions h2, .calendar h2 {
-        font-size: 25px;
-    }
-
-    .session-button {
-        font-size: 18px;
-        padding: 8px 0;
-    }
-
-    .calendar-day {
-        font-size: 14px;
-        height: 40px;
-    }
-
-    .session-count {
-        font-size: 25px;
-    }
+    .tracker { width: 100%; padding: 10px; border-radius: 10px; }
+    header h1 { font-size: 35px; }
+    .sessions h2, .calendar h2 { font-size: 25px; }
+    .session-button { font-size: 18px; padding: 8px 0; }
+    .calendar-day { font-size: 14px; height: 40px; }
+    .session-count { font-size: 25px; }
 }
